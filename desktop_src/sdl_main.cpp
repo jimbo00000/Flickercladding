@@ -124,14 +124,24 @@ int main(int argc, char *argv[])
             {
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     quit = 1;
+
+                onKeyEvent(event.key.keysym.sym, 0, event.key.state, event.key.keysym.mod);
             }
             else if (event.type == SDL_MOUSEBUTTONDOWN)
             {
-                //g_app.mouseDown(event.button.button, event.button.state, event.button.x, event.button.y);
+                onSingleTouchEvent(0, ActionDown, event.motion.x, event.motion.y);
+            }
+            else if (event.type == SDL_MOUSEBUTTONUP)
+            {
+                onSingleTouchEvent(0, ActionUp, event.motion.x, event.motion.y);
+            }
+            else if (event.type == SDL_MOUSEWHEEL)
+            {
+                onWheelEvent(event.wheel.x, event.wheel.y);
             }
             else if (event.type == SDL_MOUSEMOTION)
             {
-                //g_app.mouseMove(event.motion.x, event.motion.y);
+                onSingleTouchEvent(0, ActionMove, event.motion.x, event.motion.y);
             }
             else if (event.type == SDL_QUIT)
             {

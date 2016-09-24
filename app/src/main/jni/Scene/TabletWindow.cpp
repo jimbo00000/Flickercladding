@@ -379,7 +379,8 @@ void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
     {
     default: break;
 
-    case 258: // Tab
+    case 258: // Tab in GLFW3
+    case 9: // Tab in SDL2
         m_luaScene.ChangeScene(1);
         break;
     }
