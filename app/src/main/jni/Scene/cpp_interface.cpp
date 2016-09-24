@@ -40,7 +40,7 @@ void drawScene()
 
 void onSingleTouchEvent(int pointerid, int action, float x, float y)
 {
-    LOG_INFO("onSingleTouchEvent( @%f: %d, %d, %f, %f)\n", g_timer.seconds(), pointerid, action, x, y);
+    //LOG_INFO("onSingleTouchEvent( @%f: %d, %d, %f, %f)\n", g_timer.seconds(), pointerid, action, x, y);
     g_window.OnSingleTouch(pointerid, action, x, y);
 }
 

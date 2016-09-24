@@ -13,6 +13,8 @@ local vbos = {}
 local vao = 0
 local prog = 0
 
+local tx,ty = 0,0
+
 local basic_vert = [[
 #version 300 es
 
@@ -43,12 +45,13 @@ precision mediump int;
 in vec3 vfColor;
 out vec4 fragColor;
 
-uniform float uBright;
+uniform vec2 uTouchPt;
 
 void main()
 {
     vec3 col = vfColor;
-    col.z = uBright;
+    float d = length(col.xy - uTouchPt);
+    col *= 1. - d;
     fragColor = vec4(col, 1.0);
 }
 ]]
@@ -123,11 +126,11 @@ local bright = 0
 function colorquad.render_for_one_eye(view, proj)
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
-    local ubr_loc = gl.glGetUniformLocation(prog, "uBright")
+    local utp_loc = gl.glGetUniformLocation(prog, "uTouchPt")
     gl.glUseProgram(prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
     gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, view))
-    gl.glUniform1f(ubr_loc, bright)
+    gl.glUniform2f(utp_loc, tx, ty)
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
@@ -138,7 +141,9 @@ function colorquad.timestep(absTime, dt)
 end
 
 function colorquad.onSingleTouch(pointerid, action, x, y)
-    --print("colorquad.onSingleTouch",pointerid, action, x, y)
+    print("colorquad.onSingleTouch",pointerid, action, x, y)
+    local winw, winh = 1000,1000
+    tx,ty = x/winw, y/winh
 end
 
 function colorquad.setBrightness(b)
