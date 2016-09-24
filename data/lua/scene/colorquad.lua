@@ -46,9 +46,11 @@ uniform vec2 uTouchPt;
 
 void main()
 {
-    vec3 col = vfColor;
-    float d = length(col.xy - uTouchPt);
-    col *= 1. - d;
+    vec3 col = .5*vfColor + vec3(.5);
+    vec2 tp = uTouchPt;
+    tp.y = 1. - tp.y;
+    float d = length(col.xy - tp);
+    col *= pow(max(0., 1. - d), 5.);
     fragColor = vec4(col, 1.0);
 }
 ]]
