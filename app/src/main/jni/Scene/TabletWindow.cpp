@@ -14,7 +14,6 @@
 
 TabletWindow::TabletWindow()
 : g_si()
-, m_line()
 , m_scene()
 , m_fps()
 , m_logDumpTimer()
@@ -79,12 +78,6 @@ void TabletWindow::initGL()
     const Language lang = USEnglish;
     FontMgr::Instance().LoadLanguageFonts(lang);
 
-    FileWriteTest();
-
-    const std::string dataHome = APP_DATA_DIRECTORY;
-    const std::string lineFilename = dataHome + "myDrawing3.obj";
-    m_line.loadFromFile(lineFilename);
-    m_line.initGL();
     m_scene.initGL();
 }
 
@@ -214,7 +207,6 @@ void TabletWindow::_DisplayScene(int winw, int winh)
         .1f, 100.f);
 
     m_scene.RenderForOneEye(mvmtx, prmtx);
-    m_line.display(mvmtx, prmtx);
 }
 
 void TabletWindow::display(int winw, int winh)

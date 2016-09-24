@@ -4,7 +4,6 @@
 
 #include "GL_Includes.h"
 
-#include "LineObj.h"
 #include "Scene.h"
 
 #include "SimpleIcon.h"
@@ -32,7 +31,6 @@ protected:
     void _DisplayOverlay(int winw, int winh);
     void _DisplayScene(int winw, int winh);
 
-    LineObj m_line;
     Scene m_scene;
 
     SimpleIcon g_si;
