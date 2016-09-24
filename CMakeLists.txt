@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
 PROJECT( Flickercladding-Desktop )
 
-SET( GL_FRAMEWORK "GLFW" CACHE STRING "Which OpenGL windowing framework to use" )
+SET( GL_FRAMEWORK "SDL" CACHE STRING "Which OpenGL windowing framework to use" )
 MESSAGE( "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}" )
 
 INCLUDE(cmake_modules/InvokePython.cmake)
@@ -50,6 +50,15 @@ IF( WIN32 )
         ENDIF()
         INCLUDE_DIRECTORIES( "${GLFW3_ROOT}/include" )
         SET( FRAMEWORK_LIBS glfw3.lib )
+    ENDIF()
+
+    IF( GL_FRAMEWORK STREQUAL "SDL" )
+        #find_package(SDL2 REQUIRED)
+        MESSAGE("Using SDL2 Framework.")
+        SET( SDL2_ROOT "${LIBS_HOME}/SDL2-2.0.3" CACHE STRING "SDL2 root" )
+        INCLUDE_DIRECTORIES( "${SDL2_ROOT}/include" )
+        LINK_DIRECTORIES   ( "${SDL2_ROOT}/lib/x86" )
+        SET( FRAMEWORK_LIBS SDL2.lib SDL2main.lib legacy_stdio_definitions.lib )
     ENDIF()
 
     SET( PLATFORM_LIBS
@@ -204,6 +213,9 @@ ADD_LIBRARY( Glad ${GLAD_HOME}/src/glad.c )
 
 IF( GL_FRAMEWORK STREQUAL "GLFW" )
     ADD_EXECUTABLE( ${PROJECT_NAME} desktop_src/glfw_main.cpp )
+ENDIF()
+IF( GL_FRAMEWORK STREQUAL "SDL" )
+    ADD_EXECUTABLE( ${PROJECT_NAME} desktop_src/sdl_main.cpp )
 ENDIF()
 
 TARGET_LINK_LIBRARIES( ${PROJECT_NAME}
