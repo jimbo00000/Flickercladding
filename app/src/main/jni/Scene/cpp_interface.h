@@ -8,3 +8,4 @@ void drawScene();
 
 void onSingleTouchEvent(int pointerid, int action, float x, float y);
 void onWheelEvent(double dx, double dy);
+void setLoaderFunc(void* pFunc);

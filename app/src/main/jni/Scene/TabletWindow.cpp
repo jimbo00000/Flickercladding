@@ -14,7 +14,7 @@
 
 TabletWindow::TabletWindow()
 : g_si()
-, m_scene()
+, m_luaScene()
 , m_fps()
 , m_logDumpTimer()
 , m_iconx(20)
@@ -78,7 +78,8 @@ void TabletWindow::initGL()
     const Language lang = USEnglish;
     FontMgr::Instance().LoadLanguageFonts(lang);
 
-    m_scene.initGL();
+    m_luaScene.m_pLoaderFunc = m_pLoaderFunc;
+    m_luaScene.initGL();
 }
 
 void TabletWindow::_DrawIcon(int winw, int winh)
@@ -206,7 +207,7 @@ void TabletWindow::_DisplayScene(int winw, int winh)
         static_cast<float>(winw) / static_cast<float>(winh),
         .1f, 100.f);
 
-    m_scene.RenderForOneEye(mvmtx, prmtx);
+    m_luaScene.RenderForOneEye(mvmtx, prmtx);
 }
 
 void TabletWindow::display(int winw, int winh)
@@ -236,7 +237,7 @@ void TabletWindow::timestep(double absT, double dt)
 }
 #endif
 
-    m_scene.timestep(absT, dt);
+    m_luaScene.timestep(absT, dt);
 }
 
 int getNumPointersDown(int mask)

@@ -83,7 +83,7 @@ void LuajitScene::initGL()
     luaopen_luamylib(L);
 
     const std::string dataHome = APP_DATA_DIRECTORY;
-    const std::string scriptName = dataHome + "lua/hello.lua";
+    const std::string scriptName = dataHome + "lua/luaentry.lua";
     if (luaL_dofile(L, scriptName.c_str()))
     {
         const std::string out(lua_tostring(L, -1));

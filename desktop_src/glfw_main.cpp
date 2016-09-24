@@ -315,6 +315,7 @@ int main(int argc, char** argv)
     }
 
     printGLContextInfo(l_Window);
+    setLoaderFunc((void*)&glfwGetProcAddress);
     initGL();
     surfaceChangedScene(winw, winh);
 

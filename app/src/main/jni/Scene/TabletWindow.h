@@ -4,7 +4,7 @@
 
 #include "GL_Includes.h"
 
-#include "Scene.h"
+#include "LuajitScene.h"
 
 #include "SimpleIcon.h"
 #include "TouchPoints.h"
@@ -31,7 +31,7 @@ protected:
     void _DisplayOverlay(int winw, int winh);
     void _DisplayScene(int winw, int winh);
 
-    Scene m_scene;
+    LuajitScene m_luaScene;
 
     SimpleIcon g_si;
     FPSTimer m_fps;
@@ -59,6 +59,9 @@ protected:
     TouchPoints m_tp;
     std::pair<touchState, touchState> m_pinchStart;
     float m_scaleAtPinchStart;
+
+public:
+    void* m_pLoaderFunc;
 
 private:
     TabletWindow(const TabletWindow&);              ///< disallow copy constructor

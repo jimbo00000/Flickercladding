@@ -48,3 +48,8 @@ void onWheelEvent(double dx, double dy)
 {
     g_window.OnWheelEvent(dx, dy);
 }
+
+void setLoaderFunc(void* pFunc)
+{
+    g_window.m_pLoaderFunc = pFunc;
+}
