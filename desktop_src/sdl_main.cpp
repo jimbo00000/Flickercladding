@@ -5,20 +5,66 @@
 #  define NOMINMAX
 #  include <windows.h>
 #endif
-#include "Logger.h"
+
+#include "GL_Includes.h"
+
+#include "cpp_interface.h"
+#include "AndroidTouchEnums.h"
+#include "TouchReplayer.h"
+#include "Timer.h"
+#include "Logging.h"
 
 #include <SDL.h>
 #undef main
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-const int SCREEN_BPP = 32;
-
 SDL_Window* g_pWindow = NULL;
+int winw = 800;
+int winh = 800;
+bool portrait = true;
+
+TouchReplayer g_trp;
+Timer g_playbackTimer;
+
+void initGL()
+{
+    initScene();
+}
+
+void exitGL()
+{
+    exitScene();
+}
 
 void display()
 {
-    SDL_GL_SwapWindow(g_pWindow);
+    drawScene();
+}
+
+void setAppScreenSize()
+{
+    int w = portrait ? winw : winh;
+    int h = portrait ? winh : winw;
+    surfaceChangedScene(w, h);
+    //glfwSetWindowSize(g_pWindow, w, h);
+    glViewport(0, 0, w, h);
+}
+
+// OpenGL debug callback
+void APIENTRY myCallback(
+    GLenum source, GLenum type, GLuint id, GLenum severity,
+    GLsizei length, const GLchar *msg,
+    const void *data)
+{
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_HIGH:
+    case GL_DEBUG_SEVERITY_MEDIUM:
+    case GL_DEBUG_SEVERITY_LOW:
+        LOG_INFO("[[GL Debug]] %x %x %x %x %s\n", source, type, id, severity, msg);
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        break;
+    }
 }
 
 bool init()
@@ -29,7 +75,7 @@ bool init()
     g_pWindow = SDL_CreateWindow(
         "GL Skeleton - SDL2",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
+        winw, winh,
         SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     if (g_pWindow == NULL)
     {
@@ -53,19 +99,20 @@ bool init()
     return true;
 }
 
-
-bool initGL(int argc, char **argv)
-{
-    return true;// g_app.initGL(argc, argv);
-}
-
 int main(int argc, char *argv[])
 {
     if (init() == false)
         return 1;
 
-    if (!initGL(argc, argv))
-        return 0;
+    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
+    {
+        LOG_ERROR("Failed to initialize OpenGL context");
+        return -1;
+    }
+
+    setLoaderFunc((void*)&SDL_GL_GetProcAddress);
+    initGL();
+    surfaceChangedScene(winw, winh);
 
     SDL_Event event;
     int quit = 0;
@@ -93,6 +140,7 @@ int main(int argc, char *argv[])
         }
 
         display();
+        SDL_GL_SwapWindow(g_pWindow);
     }
 
     SDL_Quit();
