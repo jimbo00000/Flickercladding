@@ -464,3 +464,26 @@ bool LuajitScene::RayIntersects(
 {
     return false; ///@todo
 }
+
+void LuajitScene::setWindowSize(int w, int h)
+{
+    if (m_errorOccurred == true)
+        return;
+
+    if (m_bDraw == false)
+        return;
+
+    if (m_Lua == NULL)
+        return;
+
+    lua_State *L = m_Lua;
+
+    lua_getglobal(L, "on_lua_setwindowsize");
+    lua_pushinteger(L, w);
+    lua_pushinteger(L, h);
+    if (lua_pcall(L, 2, 0, 0) != 0)
+    {
+        LOG_INFO("Error running function `on_lua_setwindowsize': %s", lua_tostring(L, -1));
+        m_errorOccurred = true;
+    }
+}

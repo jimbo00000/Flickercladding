@@ -18,7 +18,7 @@ public:
     virtual ~TabletWindow();
 
     void initGL();
-    void setWindowSize(int w, int h) { m_winw = w; m_winh = h; }
+    void setWindowSize(int w, int h);
     void display(int winw, int winh);
     void timestep(double absT, double dt);
 

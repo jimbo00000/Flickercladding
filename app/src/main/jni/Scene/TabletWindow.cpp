@@ -82,6 +82,13 @@ void TabletWindow::initGL()
     m_luaScene.initGL();
 }
 
+void TabletWindow::setWindowSize(int w, int h)
+{
+    m_winw = w;
+    m_winh = h;
+    m_luaScene.setWindowSize(w, h);
+}
+
 void TabletWindow::_DrawIcon(int winw, int winh)
 {
     float mview[16];

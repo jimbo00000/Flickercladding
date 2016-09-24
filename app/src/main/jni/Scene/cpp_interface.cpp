@@ -28,6 +28,7 @@ void surfaceChangedScene(int w, int h)
     LOG_INFO("setupGraphics(%d, %d)", w, h);
     g_winw = w;
     g_winh = h;
+    g_window.setWindowSize(w, h);
 }
 
 void drawScene()

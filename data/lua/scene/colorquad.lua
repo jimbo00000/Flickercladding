@@ -13,6 +13,7 @@ local vbos = {}
 local vao = 0
 local prog = 0
 
+local winw, winh = 1000,1000
 local tx,ty = 0,0
 
 local basic_vert = [[
@@ -137,12 +138,15 @@ end
 
 function colorquad.onSingleTouch(pointerid, action, x, y)
     --print("colorquad.onSingleTouch",pointerid, action, x, y)
-    local winw, winh = 1000,1000
     tx,ty = x/winw, y/winh
 end
 
 function colorquad.setBrightness(b)
     bright = b
+end
+
+function colorquad.setWindowSize(w,h)
+    winw, winh = w,h
 end
 
 return colorquad

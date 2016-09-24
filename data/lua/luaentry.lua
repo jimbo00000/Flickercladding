@@ -167,7 +167,7 @@ local action_types = {
 local pointer_states = { }
 
 function on_lua_singletouch(pointerid, action, x, y)
-    print("on_lua_singletouch", pointerid, action, x, y)
+    --print("on_lua_singletouch", pointerid, action, x, y)
     if s.onSingleTouch then s.onSingleTouch(pointerid, action, x, y) end
 
     local func_table = {
@@ -211,4 +211,8 @@ function on_lua_singletouch(pointerid, action, x, y)
             s.setBrightness((pd-200) / 1000)
         end
     end
+end
+
+function on_lua_setwindowsize(w, h)
+    if s.setWindowSize then s.setWindowSize(w, h) end
 end

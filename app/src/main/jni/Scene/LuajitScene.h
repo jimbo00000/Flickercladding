@@ -35,6 +35,7 @@ public:
     virtual void timestep(double absTime, double dt);
     virtual void RenderForOneEye(const float* pMview, const float* pPersp) const;
     virtual void onSingleTouch(int pointerid, int action, int x, int y);
+    virtual void setWindowSize(int w, int h);
 
     virtual const std::string& ErrorText() const { return m_errorText; }
 
