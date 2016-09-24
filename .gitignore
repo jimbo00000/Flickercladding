@@ -1,1 +1,6 @@
 /*.iml
+build
+.gradle
+.idea
+/app/src/main/jni/autogen/g_shaders.h
+/local.properties
