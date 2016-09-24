@@ -3,6 +3,7 @@
 #pragma once
 
 bool initScene();
+void exitScene();
 void surfaceChangedScene(int w, int h);
 void drawScene();
 

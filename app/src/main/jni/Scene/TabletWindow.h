@@ -18,6 +18,7 @@ public:
     virtual ~TabletWindow();
 
     void initGL();
+    void exitGL();
     void setWindowSize(int w, int h);
     void display(int winw, int winh);
     void timestep(double absT, double dt);

@@ -130,6 +130,10 @@ function on_lua_initgl(pLoaderFunc)
 
 end
 
+function on_lua_exitgl()
+    s.exitGL()
+end
+
 function on_lua_setscene(name)
     print("Lua Setting the scene to "..name)
 

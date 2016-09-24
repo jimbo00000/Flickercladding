@@ -31,6 +31,11 @@ void initGL()
     initScene();
 }
 
+void exitGL()
+{
+    exitScene();
+}
+
 void display()
 {
     drawScene();
@@ -86,8 +91,7 @@ void keyboard(GLFWwindow* pWindow, int key, int codes, int action, int mods)
             break;
 
         case GLFW_KEY_ESCAPE:
-            glfwTerminate();
-            exit(0);
+            glfwSetWindowShouldClose(g_pWindow, GL_TRUE);
             break;
     }
     }
@@ -327,6 +331,7 @@ int main(int argc, char** argv)
         glfwSwapBuffers(l_Window);
     }
 
+    exitGL();
     glfwDestroyWindow(l_Window);
     glfwTerminate();
     exit(EXIT_SUCCESS);

@@ -82,6 +82,13 @@ void TabletWindow::initGL()
     m_luaScene.initGL();
 }
 
+void TabletWindow::exitGL()
+{
+    m_luaScene.exitGL();
+    g_si.exitGL();
+    m_tp.exitGL();
+}
+
 void TabletWindow::setWindowSize(int w, int h)
 {
     m_winw = w;

@@ -23,6 +23,11 @@ bool initScene()
     return true;
 }
 
+void exitScene()
+{
+    g_window.exitGL();
+}
+
 void surfaceChangedScene(int w, int h)
 {
     LOG_INFO("setupGraphics(%d, %d)", w, h);
