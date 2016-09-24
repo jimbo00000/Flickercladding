@@ -1,5 +1,6 @@
 -- luaentry.lua
-package.path = "/sdcard/Android/data/com.android.luavr/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.path
+local appDir = "/sdcard/Android/data/com.android.flickercladding"
+package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.path
 package.path = "../data/lua/;" .. package.path
 
 local ffi = require("ffi")
@@ -38,7 +39,7 @@ function switch_to_scene(name)
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             local dir = ""
             if ANDROID then
-                dir = "/sdcard/Android/data/com.android.luavr/lua"
+                dir = appDir.."/lua"
             else
                 dir = "../data/lua"
             end
@@ -101,7 +102,7 @@ function on_lua_initgl(pLoaderFunc)
         -- Instruct the scene where to load data from. Dir is relative to app's working dir.
         local dir = ""
         if pLoaderFunc == 0 then -- Assuming this means Android
-            dir = "/sdcard/Android/data/com.android.luavr/lua"
+            dir = appDir.."/lua"
             ANDROID = true
         else
             dir = "../data/lua"
@@ -143,7 +144,7 @@ function on_lua_setscene(name)
         s = require("scene/"..base)
         if s then
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-            if s.setDataDirectory then s.setDataDirectory("/sdcard/Android/data/com.android.luavr/lua") end
+            if s.setDataDirectory then s.setDataDirectory(appDir.."/lua") end
             s.initGL()
         end
     end

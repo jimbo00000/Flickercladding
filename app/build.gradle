@@ -45,7 +45,9 @@ model {
         cppFlags  += "-I${file("src/main/jni/Shaders")}".toString()
         cppFlags  += "-I${file("src/main/jni/Scene")}".toString()
         cppFlags  += "-I${file("src/main/jni/autogen")}".toString()
-        ldLibs    += ["log", "GLESv3"]
+        cppFlags  += "-I${file("../LuaJIT/src")}".toString()
+        ldFlags  += "-L${file("LuaJIT-android/armeabi-v7a")}".toString()
+        ldLibs    += ["log", "GLESv3", "luajit"]
     }
 
     android.buildTypes {
