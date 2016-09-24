@@ -9,6 +9,9 @@ INVOKEPYTHON( "tools/hardcode_shaders.py" )
 
 ADD_DEFINITIONS(-DAPP_DATA_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/data/")
 
+# Remember to do git submodule update
+SET( LUAJIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT" )
+
 #
 # Platform-dependent section
 #
@@ -26,6 +29,11 @@ IF( WIN32 )
     SET( GLM_ROOT "${LIBS_HOME}/glm-0.9.5.4/glm" CACHE STRING "glm root" )
     INCLUDE_DIRECTORIES( "${GLM_ROOT}" )
     ADD_DEFINITIONS( -DGLM_FORCE_RADIANS )
+
+    INCLUDE_DIRECTORIES( "${LUAJIT_ROOT}/src" )
+    LINK_DIRECTORIES( "${LUAJIT_ROOT}/src" )
+    SET( LUAJIT_LIBS lua51.lib )
+    ADD_DEFINITIONS( -DUSE_LUAJIT )
 
     IF( GL_FRAMEWORK STREQUAL "GLFW" )
         MESSAGE("Using GLFW Framework.")
@@ -46,6 +54,7 @@ IF( WIN32 )
 
     SET( PLATFORM_LIBS
         ${FRAMEWORK_LIBS}
+        ${LUAJIT_LIBS}
         opengl32.lib glu32.lib
         Winmm.lib
         ws2_32.lib
@@ -82,6 +91,12 @@ ELSEIF( APPLE )
     INCLUDE_DIRECTORIES( "${GLM_ROOT}" )
     ADD_DEFINITIONS( -DGLM_FORCE_RADIANS )
 
+    INCLUDE_DIRECTORIES( "${LUAJIT_ROOT}/src" )
+    LINK_DIRECTORIES   ( "${LUAJIT_ROOT}/src" )
+    # http://luajit.org/install.html
+    SET( LUAJIT_LIBS -lluajit -pagezero_size 10000 -image_base 100000000 )
+    ADD_DEFINITIONS( -DUSE_LUAJIT )
+
     #SET( PLATFORM_LIBS  ${COCOA_LIBRARY} ${IOKIT_LIBRARY} )
     SET( PLATFORM_LIBS
         ${FRAMEWORK_LIBS}
@@ -90,6 +105,7 @@ ELSEIF( APPLE )
         ${OpenGL_LIBRARY}
         -lGLEW
         -lglfw
+        ${LUAJIT_LIBS}
         )
 ELSEIF( UNIX )
     ADD_DEFINITIONS( -D_UNIX )
@@ -111,6 +127,11 @@ ELSEIF( UNIX )
     INCLUDE_DIRECTORIES( "${GLM_ROOT}" )
     ADD_DEFINITIONS( -DGLM_FORCE_RADIANS )
 
+    INCLUDE_DIRECTORIES( "${LUAJIT_ROOT}/src" )
+    LINK_DIRECTORIES   ( "${LUAJIT_ROOT}/src" )
+    SET( LUAJIT_LIBS -lluajit )
+    ADD_DEFINITIONS( -DUSE_LUAJIT )
+
     IF( GL_FRAMEWORK STREQUAL "GLFW" )
         MESSAGE("Using GLFW Framework.")
         INCLUDE_DIRECTORIES( "/usr/local/include/GLFW" )
@@ -127,6 +148,7 @@ ELSEIF( UNIX )
         -lGL
         -lGLU
         ${FRAMEWORK_LIBS}
+        ${LUAJIT_LIBS}
         -lXinerama # GLFW 3.1
         -lXcursor # GLFW 3.1
         -ldl
