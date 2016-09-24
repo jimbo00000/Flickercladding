@@ -23,13 +23,10 @@ in vec4 vColor;
 
 out vec3 vfColor;
 
-uniform mat4 mvmtx;
-uniform mat4 prmtx;
-
 void main()
 {
     vfColor = vColor.xyz;
-    gl_Position = prmtx * mvmtx * vPosition;
+    gl_Position = vPosition;
 }
 ]]
 
@@ -59,10 +56,10 @@ void main()
 
 local function init_cube_attributes()
     local verts = glFloatv(4*3, {
-        0,0,0,
-        1,0,0,
+        -1,-1,0,
+        1,-1,0,
         1,1,0,
-        0,1,0,
+        -1,1,0,
         })
 
     local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
@@ -124,12 +121,8 @@ end
 
 local bright = 0
 function colorquad.render_for_one_eye(view, proj)
-    local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
-    local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
     local utp_loc = gl.glGetUniformLocation(prog, "uTouchPt")
     gl.glUseProgram(prog)
-    gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
-    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, view))
     gl.glUniform2f(utp_loc, tx, ty)
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
@@ -141,7 +134,7 @@ function colorquad.timestep(absTime, dt)
 end
 
 function colorquad.onSingleTouch(pointerid, action, x, y)
-    print("colorquad.onSingleTouch",pointerid, action, x, y)
+    --print("colorquad.onSingleTouch",pointerid, action, x, y)
     local winw, winh = 1000,1000
     tx,ty = x/winw, y/winh
 end
