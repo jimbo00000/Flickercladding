@@ -1,0 +1,75 @@
+apply plugin: 'com.android.model.application'
+import org.apache.tools.ant.taskdefs.condition.Os
+
+model {
+    task generateShaderHeader {
+        println 'Hardcoding shaders...'
+        def script = "python tools/hardcode_shaders.py".execute()
+        script.in.eachLine {line -> println line}
+        script.err.eachLine {line -> println "ERROR: " + line}
+        script.waitFor()
+    }
+
+    android {
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.0"
+
+        defaultConfig.with {
+            applicationId    = "com.android.flickercladding"
+            minSdkVersion.apiLevel    = 5
+            targetSdkVersion.apiLevel = 23
+        }
+    }
+
+    compileOptions.with {
+        sourceCompatibility=JavaVersion.VERSION_1_7
+        targetCompatibility=JavaVersion.VERSION_1_7
+    }
+
+    android.ndk {
+        def os = System.getProperty("os.name").toLowerCase()
+        println(os);
+        if (os.contains("windows")) {
+            cppFlags  += "-I${file("C:/lib/glm-0.9.5.4/glm")}".toString()
+        }
+        else if (os.contains("linux")) {
+            cppFlags  += "-I${file("/home/jim/lib/glm")}".toString()
+        }
+
+        moduleName = "flickercladding"
+        stl = "stlport_static"
+        cppFlags  += "-Werror"
+        cppFlags  += "-I${file("src/main/jni")}".toString()
+        cppFlags  += "-I${file("src/main/jni/Util")}".toString()
+        cppFlags  += "-I${file("src/main/jni/GLUtil")}".toString()
+        cppFlags  += "-I${file("src/main/jni/Shaders")}".toString()
+        cppFlags  += "-I${file("src/main/jni/Scene")}".toString()
+        cppFlags  += "-I${file("src/main/jni/autogen")}".toString()
+        ldLibs    += ["log", "GLESv3"]
+    }
+
+    android.buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles  += file('proguard-rules.txt')
+        }
+    }
+
+    android.productFlavors {
+        create ("arm7") {
+            ndk.abiFilters += "armeabi-v7a"
+        }
+        create ("arm8") {
+            ndk.abiFilters += "arm64-v8a"
+        }
+        create ("x86-32") {
+            ndk.abiFilters += "x86"
+        }
+        // for detailed abiFilter descriptions, refer to "Supported ABIs" @
+        // https://developer.android.com/ndk/guides/abis.html#sa
+
+        // build one including all cpu architectures
+        create("all")
+    }
+}
+
