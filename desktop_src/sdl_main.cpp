@@ -45,7 +45,7 @@ void setAppScreenSize()
     int w = portrait ? winw : winh;
     int h = portrait ? winh : winw;
     surfaceChangedScene(w, h);
-    //glfwSetWindowSize(g_pWindow, w, h);
+    SDL_SetWindowSize(g_pWindow, w, h);
     glViewport(0, 0, w, h);
 }
 
@@ -132,6 +132,9 @@ int main(int argc, char *argv[])
     {
         g_trp.PlaybackRecentEvents(g_playbackTimer.seconds(), onSingleTouchEvent);
 
+        const int w = portrait ? winw : winh;
+        const int h = portrait ? winh : winw;
+
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
@@ -142,6 +145,14 @@ int main(int argc, char *argv[])
             {
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     quit = 1;
+
+                if (event.key.keysym.sym  == SDLK_F1)
+                {
+                    winw = 1000;
+                    winh = 800;
+                    portrait = !portrait;
+                    setAppScreenSize();
+                }
 
                 onKeyEvent(event.key.keysym.sym, 0, event.key.state, event.key.keysym.mod);
             }
@@ -173,24 +184,24 @@ int main(int argc, char *argv[])
 
             case SDL_FINGERDOWN:
                 {
-                    const float ex = event.tfinger.x * (float)winw;
-                    const float ey = event.tfinger.y * (float)winh;
+                    const float ex = event.tfinger.x * (float)w;
+                    const float ey = event.tfinger.y * (float)h;
                     onSingleTouchEvent(event.tfinger.fingerId, ActionDown, ex, ey);
                 }
                 break;
 
             case SDL_FINGERUP:
                 {
-                    const float ex = event.tfinger.x * (float)winw;
-                    const float ey = event.tfinger.y * (float)winh;
+                    const float ex = event.tfinger.x * (float)w;
+                    const float ey = event.tfinger.y * (float)h;
                     onSingleTouchEvent(event.tfinger.fingerId, ActionUp, ex, ey);
                 }
                 break;
 
             case SDL_FINGERMOTION:
                 {
-                    const float ex = event.tfinger.x * (float)winw;
-                    const float ey = event.tfinger.y * (float)winh;
+                    const float ex = event.tfinger.x * (float)w;
+                    const float ey = event.tfinger.y * (float)h;
                     onSingleTouchEvent(event.tfinger.fingerId, ActionMove, ex, ey);
                 }
                 break;
