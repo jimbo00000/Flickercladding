@@ -180,15 +180,22 @@ void TabletWindow::_DrawText(int winw, int winh)
             proj,
             doKerning);
 
-        const float3 wh = { 1.f, 1.f, 1.f };
-        const std::string& err = m_luaScene.ErrorText();
-        pFont24->DrawString(
-            err.c_str(),
-            10,
-            y += lineh,
-            wh,
-            proj,
-            doKerning);
+        const float3 red = { 1.f, .8f, .8f };
+        std::string err = m_luaScene.ErrorText();
+        const int cols = 40;
+        std::string chunk = err.substr(0, cols);
+        while (chunk.length() > 0)
+        {
+            chunk = err.substr(0, cols);
+            pFont24->DrawString(
+                chunk.c_str(),
+                10,
+                y += lineh,
+                red,
+                proj,
+                doKerning);
+            err = err.substr(chunk.length());
+        }
     }
     glDisable(GL_BLEND);
 }
