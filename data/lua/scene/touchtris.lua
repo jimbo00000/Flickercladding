@@ -131,9 +131,8 @@ function touchtris.render_for_one_eye(view, proj)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, id))
 
     gl.glBindVertexArray(vao)
-    do
+    for k,p in pairs(pointers) do
         local tx = {}
-        local p = pointers[0]
         if p then
             local x,y = p.x, -p.y
             x = 2*x - 1

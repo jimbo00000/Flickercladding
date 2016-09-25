@@ -157,6 +157,30 @@ int main(int argc, char *argv[])
             }
             break;
 
+            case SDL_FINGERDOWN:
+                {
+                    const float ex = event.tfinger.x * (float)winw;
+                    const float ey = event.tfinger.y * (float)winh;
+                    onSingleTouchEvent(0, ActionDown, ex, ey);
+                }
+                break;
+
+            case SDL_FINGERUP:
+                {
+                    const float ex = event.tfinger.x * (float)winw;
+                    const float ey = event.tfinger.y * (float)winh;
+                    onSingleTouchEvent(0, ActionUp, ex, ey);
+                }
+                break;
+
+            case SDL_FINGERMOTION:
+                {
+                    const float ex = event.tfinger.x * (float)winw;
+                    const float ey = event.tfinger.y * (float)winh;
+                    onSingleTouchEvent(0, ActionMove, ex, ey);
+                }
+                break;
+
             case SDL_QUIT:
             {
                 quit = 1;
