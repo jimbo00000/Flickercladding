@@ -166,7 +166,6 @@ function on_lua_singletouch(pointerid, action, x, y)
         ["Up"] = function (pointerid, x, y)
             local p = pointer_states[pointerid]
             if p then p.down = false end
-            connect_to_debugger()
         end,
         ["PointerUp"] = function (pointerid, x, y)
             local p = pointer_states[pointerid]
