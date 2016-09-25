@@ -73,7 +73,7 @@ bool init()
         return false;
 
     g_pWindow = SDL_CreateWindow(
-        "GL Skeleton - SDL2",
+        "Flickercladding - SDL2",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         winw, winh,
         SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);

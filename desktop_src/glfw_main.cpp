@@ -272,7 +272,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
-    l_Window = glfwCreateWindow(winw, winh, "GLFW desktop GL", NULL, NULL);
+    l_Window = glfwCreateWindow(winw, winh, "Flickercladding - GLFW 3", NULL, NULL);
     if (!l_Window)
     {
         glfwTerminate();
