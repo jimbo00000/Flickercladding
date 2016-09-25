@@ -99,6 +99,18 @@ bool init()
     return true;
 }
 
+void drop(const char* path)
+{
+    if (path == NULL)
+        return;
+
+    const std::string touchFile(path);
+    g_trp.LoadTouchLogFromFile(touchFile);
+    g_playbackTimer.reset();
+
+    //SDL_free(path);
+}
+
 int main(int argc, char *argv[])
 {
     if (init() == false)
@@ -118,6 +130,8 @@ int main(int argc, char *argv[])
     int quit = 0;
     while (quit == 0)
     {
+        g_trp.PlaybackRecentEvents(g_playbackTimer.seconds(), onSingleTouchEvent);
+
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
@@ -179,6 +193,10 @@ int main(int argc, char *argv[])
                     const float ey = event.tfinger.y * (float)winh;
                     onSingleTouchEvent(event.tfinger.fingerId, ActionMove, ex, ey);
                 }
+                break;
+
+            case SDL_DROPFILE:
+                drop(event.drop.file);
                 break;
 
             case SDL_QUIT:
