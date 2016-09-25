@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
                 {
                     const float ex = event.tfinger.x * (float)winw;
                     const float ey = event.tfinger.y * (float)winh;
-                    onSingleTouchEvent(0, ActionDown, ex, ey);
+                    onSingleTouchEvent(event.tfinger.fingerId, ActionDown, ex, ey);
                 }
                 break;
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
                 {
                     const float ex = event.tfinger.x * (float)winw;
                     const float ey = event.tfinger.y * (float)winh;
-                    onSingleTouchEvent(0, ActionUp, ex, ey);
+                    onSingleTouchEvent(event.tfinger.fingerId, ActionUp, ex, ey);
                 }
                 break;
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
                 {
                     const float ex = event.tfinger.x * (float)winw;
                     const float ey = event.tfinger.y * (float)winh;
-                    onSingleTouchEvent(0, ActionMove, ex, ey);
+                    onSingleTouchEvent(event.tfinger.fingerId, ActionMove, ex, ey);
                 }
                 break;
 

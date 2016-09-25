@@ -284,6 +284,9 @@ void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
     const int pointerflag = 1 << pointerid;
     const int actionflag = action & 0xff;
 
+    if (pointerid >= m_pointerStates.size())
+        return;
+
     touchState& ts = m_pointerStates[pointerid];
     ts.state = actionflag;
     ts.x = x;
