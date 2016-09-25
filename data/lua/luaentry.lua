@@ -202,28 +202,23 @@ function on_lua_singletouch(pointerid, action, x, y)
     end
 end
 
-function connect_to_debugger()
-    --[[
-    Connect to a running debugger server in ZeroBrane Studio.
-      - Choose Project->Start Debugger Server
-      - Include mobdebug.lua in lua/ next to scenebridge.lua
-      - Include socket/core.dll in the working directory of the app
-         TODO: set package.path to get this from within the source tree
-      TODO: Can only trigger bp once per reload of lua state.
-    ]]
-    if (ffi.os == "Windows") then
-        --TODO: how do I link to socket package on Linux?
-        package.loadlib("../../data/lua/socket/core.dll", "luaopen_socket_core")
-        local socket = require("socket.core")
-    end
-    print("-------STARTING DEBUG----")
-    require('mobdebug').start()
-end
-
 function on_lua_keypressed(key)
-    print("Heard key "..key)
+    --print("Heard key "..key)
     if key == 298 then -- F9
-        --connect_to_debugger()
+        --[[
+        Connect to a running debugger server in ZeroBrane Studio.
+          - Choose Project->Start Debugger Server
+          - Include mobdebug.lua in lua/ next to scenebridge.lua
+          - Include socket/core.dll in the working directory of the app
+             TODO: set package.path to get this from within the source tree
+          TODO: Can only trigger bp once per reload of lua state.
+        ]]
+        if (ffi.os == "Windows") then
+            --TODO: how do I link to socket package on Linux?
+            package.loadlib("socket/core.dll", "luaopen_socket_core")
+            local socket = require("socket.core")
+        end
+        require('mobdebug').start()
     end
 end
 
