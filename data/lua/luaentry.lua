@@ -211,6 +211,8 @@ function connect_to_debugger()
           - Include socket/core.dll in the working directory of the app
              TODO: set package.path to get this from within the source tree
           TODO: Can only trigger bp once per reload of lua state.
+          One copy of socket/core.dll looks for lua.lib by name - the quick
+          fix is to copy lua51.dll to lua.dll. Hex editing the dll is also an option.
         ]]
         if (ffi.os == "Windows") then
             --TODO: how do I link to socket package on Linux?
