@@ -176,9 +176,9 @@ void LuajitScene::timestep(double absTime, double dt)
 
     if (m_queuedEvents.empty() == false)
     {
-        const queuedTouchEvent e = m_queuedEvents.front();
         while (m_queuedEvents.empty() == false)
         {
+            const queuedTouchEvent e = m_queuedEvents.front();
             lua_getglobal(L, "on_lua_singletouch");
             lua_pushinteger(L, e.pointerid);
             lua_pushinteger(L, e.action);
