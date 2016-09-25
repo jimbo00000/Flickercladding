@@ -166,6 +166,7 @@ function on_lua_singletouch(pointerid, action, x, y)
         ["Up"] = function (pointerid, x, y)
             local p = pointer_states[pointerid]
             if p then p.down = false end
+            connect_to_debugger()
         end,
         ["PointerUp"] = function (pointerid, x, y)
             local p = pointer_states[pointerid]
@@ -202,9 +203,7 @@ function on_lua_singletouch(pointerid, action, x, y)
     end
 end
 
-function on_lua_keypressed(key)
-    --print("Heard key "..key)
-    if key == 298 then -- F9
+function connect_to_debugger()
         --[[
         Connect to a running debugger server in ZeroBrane Studio.
           - Choose Project->Start Debugger Server
@@ -219,6 +218,12 @@ function on_lua_keypressed(key)
             local socket = require("socket.core")
         end
         require('mobdebug').start()
+end
+
+function on_lua_keypressed(key)
+    --print("Heard key "..key)
+    if key == 298 then -- F9
+        connect_to_debugger()
     end
 end
 
