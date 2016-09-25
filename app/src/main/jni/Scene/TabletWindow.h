@@ -6,7 +6,6 @@
 
 #include "LuajitScene.h"
 
-#include "SimpleIcon.h"
 #include "TouchPoints.h"
 #include "FPSTimer.h"
 #include "vectortypes.h"
@@ -28,14 +27,12 @@ public:
     void onKeyEvent(int key, int codes, int action, int mods);
 
 protected:
-    void _DrawIcon(int winw, int winh);
     void _DrawText(int winw, int winh);
     void _DisplayOverlay(int winw, int winh);
     void _DisplayScene(int winw, int winh);
 
     LuajitScene m_luaScene;
 
-    SimpleIcon g_si;
     FPSTimer m_fps;
     Timer m_logDumpTimer;
     int m_winw;

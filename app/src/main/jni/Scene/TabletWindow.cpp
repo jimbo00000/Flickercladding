@@ -13,8 +13,7 @@
 #include <fstream>
 
 TabletWindow::TabletWindow()
-: g_si()
-, m_luaScene()
+: m_luaScene()
 , m_fps()
 , m_logDumpTimer()
 , m_iconx(20)
@@ -72,7 +71,6 @@ void TabletWindow::initGL()
     const std::string s(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
     m_glSLVersion = s;
 
-    g_si.initGL();
     m_tp.initGL();
 
     const Language lang = USEnglish;
@@ -85,7 +83,6 @@ void TabletWindow::initGL()
 void TabletWindow::exitGL()
 {
     m_luaScene.exitGL();
-    g_si.exitGL();
     m_tp.exitGL();
 }
 
@@ -94,23 +91,6 @@ void TabletWindow::setWindowSize(int w, int h)
     m_winw = w;
     m_winh = h;
     m_luaScene.setWindowSize(w, h);
-}
-
-void TabletWindow::_DrawIcon(int winw, int winh)
-{
-    float mview[16];
-    float proj[16];
-    // Set up projection matrix for Pixel coordinates - lower left origin
-    glhOrtho(proj,
-        0.f, static_cast<float>(winw),
-        static_cast<float>(winh),0.f, 
-        -1.f, 1.f);
-    MakeIdentityMatrix(mview);
-    glhTranslate(mview, m_iconx, m_icony, 0);
-    const float s = m_iconScale * m_scaleAtPinchStart;
-    glhScale(mview, s, s, s);
-
-    g_si.display(mview, proj);
 }
 
 void TabletWindow::_DrawText(int winw, int winh)
@@ -202,7 +182,6 @@ void TabletWindow::_DrawText(int winw, int winh)
 
 void TabletWindow::_DisplayOverlay(int winw, int winh)
 {
-    _DrawIcon(winw, winh);
     _DrawText(winw, winh);
 
 #if 0 //ndef __ANDROID__
