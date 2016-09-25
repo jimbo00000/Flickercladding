@@ -55,6 +55,11 @@ void onWheelEvent(double dx, double dy)
     g_window.OnWheelEvent(dx, dy);
 }
 
+void onKeyEvent(int key, int codes, int action, int mods)
+{
+    g_window.onKeyEvent(key, codes, action, mods);
+}
+
 void setLoaderFunc(void* pFunc)
 {
     g_window.m_pLoaderFunc = pFunc;

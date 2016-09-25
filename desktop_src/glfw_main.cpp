@@ -60,6 +60,7 @@ void keyboard(GLFWwindow* pWindow, int key, int codes, int action, int mods)
     switch (key)
     {
         default:
+            onKeyEvent(key, codes, action, mods);
             break;
 
         case GLFW_KEY_F1:

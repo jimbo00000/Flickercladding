@@ -14,6 +14,7 @@ LuajitScene::LuajitScene()
 , m_Lua(NULL)
 , m_errorOccurred(false)
 , m_errorText()
+, m_changeSceneOnNextTimestep(false)
 , m_queuedEvents()
 {
 }
@@ -192,6 +193,20 @@ void LuajitScene::timestep(double absTime, double dt)
             m_queuedEvents.pop();
         }
     }
+
+    if (m_changeSceneOnNextTimestep)
+    {
+        lua_getglobal(L, "on_lua_changescene");
+        lua_pushinteger(L, 1);
+        if (lua_pcall(L, 1, 0, 0) != 0)
+        {
+            LOG_INFO("Error running function `on_lua_changescene': %s", lua_tostring(L, -1));
+            m_errorOccurred = true;
+        }
+
+        m_changeSceneOnNextTimestep = false;
+    }
+
 }
 
 #ifdef USE_SIXENSE
@@ -486,4 +501,18 @@ void LuajitScene::setWindowSize(int w, int h)
         LOG_INFO("Error running function `on_lua_setwindowsize': %s", lua_tostring(L, -1));
         m_errorOccurred = true;
     }
+}
+
+void LuajitScene::ChangeScene(int d)
+{
+    if (m_errorOccurred == true)
+        return;
+
+    if (m_bDraw == false)
+        return;
+
+    if (m_Lua == NULL)
+        return;
+
+    m_changeSceneOnNextTimestep = true;
 }

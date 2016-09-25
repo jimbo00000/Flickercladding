@@ -220,3 +220,7 @@ end
 function on_lua_setwindowsize(w, h)
     if s.setWindowSize then s.setWindowSize(w, h) end
 end
+
+function on_lua_changescene(d)
+    switch_scene(d)
+end

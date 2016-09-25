@@ -25,6 +25,7 @@ public:
 
     void OnSingleTouch(int pointerid, int action, int x, int y);
     void OnWheelEvent(double dx, double dy);
+    void onKeyEvent(int key, int codes, int action, int mods);
 
 protected:
     void _DrawIcon(int winw, int winh);

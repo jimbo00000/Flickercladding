@@ -370,3 +370,15 @@ void TabletWindow::OnWheelEvent(double dx, double dy)
 {
     m_chassisPos.z += .4f * dy;
 }
+
+void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
+{
+    switch (key)
+    {
+    default: break;
+
+    case 258: // Tab
+        m_luaScene.ChangeScene(1);
+        break;
+    }
+}
