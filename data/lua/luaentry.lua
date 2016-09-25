@@ -5,13 +5,13 @@ package.path = "../data/lua/;" .. package.path
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
-local s = require("scene.colorquad")
+local s = require("scene.touchtris")
 
 local ANDROID = false
 local win_w,win_h = 800,800
 
 local scene_modules = {
-    "scene.colorquad",
+    "scene.touchtris",
     "scene.clockface",
 }
 local scene_module_idx = 1
