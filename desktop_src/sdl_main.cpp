@@ -120,32 +120,48 @@ int main(int argc, char *argv[])
     {
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_KEYDOWN)
+            switch (event.type)
+            {
+            default: break;
+
+            case SDL_KEYDOWN:
             {
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     quit = 1;
 
                 onKeyEvent(event.key.keysym.sym, 0, event.key.state, event.key.keysym.mod);
             }
-            else if (event.type == SDL_MOUSEBUTTONDOWN)
+            break;
+
+            case SDL_MOUSEBUTTONDOWN:
             {
                 onSingleTouchEvent(0, ActionDown, event.motion.x, event.motion.y);
             }
-            else if (event.type == SDL_MOUSEBUTTONUP)
+            break;
+
+            case SDL_MOUSEBUTTONUP:
             {
                 onSingleTouchEvent(0, ActionUp, event.motion.x, event.motion.y);
             }
-            else if (event.type == SDL_MOUSEWHEEL)
+            break;
+
+            case  SDL_MOUSEWHEEL:
             {
                 onWheelEvent(event.wheel.x, event.wheel.y);
             }
-            else if (event.type == SDL_MOUSEMOTION)
+            break;
+
+            case SDL_MOUSEMOTION:
             {
                 onSingleTouchEvent(0, ActionMove, event.motion.x, event.motion.y);
             }
-            else if (event.type == SDL_QUIT)
+            break;
+
+            case SDL_QUIT:
             {
                 quit = 1;
+            }
+            break;
             }
         }
 
