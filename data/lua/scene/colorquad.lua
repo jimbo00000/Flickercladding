@@ -51,7 +51,9 @@ void main()
     vec2 tp = uTouchPt;
     tp.y = 1. - tp.y;
     float d = length(col.xy - tp);
-    col *= pow(max(0., 1. - d), 5.);
+
+    col *= smoothstep(.1, 0., d);
+
     fragColor = vec4(col, 1.0);
 }
 ]]
