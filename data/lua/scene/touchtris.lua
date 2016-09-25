@@ -156,6 +156,10 @@ end
 
 function touchtris.onSingleTouch(pointerid, action, x, y)
     pointers[pointerid] = {x=x/winw, y=y/winh}
+
+    if action == 1 or action == 6 then
+        pointers[pointerid] = nil
+    end
 end
 
 function touchtris.setWindowSize(w,h)
