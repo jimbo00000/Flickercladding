@@ -279,10 +279,10 @@ int getNumPointersDown(int mask)
 
 void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
 {
-    m_luaScene.onSingleTouch(pointerid, action, x, y);
+    const int actionflag = action & 0xff;
+    m_luaScene.onSingleTouch(pointerid, actionflag, x, y);
 
     const int pointerflag = 1 << pointerid;
-    const int actionflag = action & 0xff;
 
     if (pointerid >= m_pointerStates.size())
         return;
