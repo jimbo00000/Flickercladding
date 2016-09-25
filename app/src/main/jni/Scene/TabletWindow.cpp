@@ -373,6 +373,8 @@ void TabletWindow::OnWheelEvent(double dx, double dy)
 
 void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
 {
+    m_luaScene.keypressed(key);
+
     switch (key)
     {
     default: break;
