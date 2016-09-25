@@ -139,7 +139,10 @@ function touchtris.render_for_one_eye(view, proj)
             x = 2*x - 1
             y = 2*y + 1
             mm.make_translation_matrix(tx, x, y, 0)
-        gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, tx))
+            local s = {}
+            mm.make_scale_matrix(s, .3, .3, .3)
+            mm.post_multiply(tx, s)
+            gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, tx))
         end
 
         gl.glDrawElements(GL.GL_TRIANGLES, 3, GL.GL_UNSIGNED_INT, nil)
