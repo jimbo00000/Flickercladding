@@ -72,9 +72,9 @@ end
 function on_lua_initgl(pLoaderFunc)
     print("on_lua_initgl")
     if pLoaderFunc == 0 then
-		print("No loader function - initializing GLES 3")
+        print("No loader function - initializing GLES 3")
         openGL = require("opengles3")
-	else
+    else
         --[[
             Now, the GL function loading business...
             Everything in GL 1.2 or older has names in OpenGL32.dll/opengl32.dll (Windows),
