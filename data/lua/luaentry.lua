@@ -8,6 +8,7 @@ local openGL -- @todo select GL or GLES header
 local s = require("scene.colorquad")
 
 local ANDROID = false
+local win_w,win_h = 800,800
 
 local scene_modules = {
     "scene.colorquad",
@@ -44,6 +45,7 @@ function switch_to_scene(name)
                 dir = "../data/lua"
             end
             if s.setDataDirectory then s.setDataDirectory(dir) end
+            if s.setWindowSize then s.setWindowSize(win_w, win_h) end
             s.initGL()
         end
     end
@@ -149,6 +151,7 @@ function on_lua_setscene(name)
         if s then
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             if s.setDataDirectory then s.setDataDirectory(appDir.."/lua") end
+            if s.setWindowSize then s.setWindowSize(w, h) end
             s.initGL()
         end
     end
@@ -218,6 +221,7 @@ function on_lua_singletouch(pointerid, action, x, y)
 end
 
 function on_lua_setwindowsize(w, h)
+    win_w,win_h = w,h
     if s.setWindowSize then s.setWindowSize(w, h) end
 end
 
