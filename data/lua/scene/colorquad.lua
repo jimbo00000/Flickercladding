@@ -15,6 +15,8 @@ local prog = 0
 
 local winw, winh = 1000,1000
 local tx,ty = 0,0
+local pointers = { }
+
 
 local basic_vert = [[
 #version 300 es
@@ -42,18 +44,23 @@ precision mediump int;
 
 in vec3 vfColor;
 out vec4 fragColor;
-
-uniform vec2 uTouchPt;
+#line 46
+#define MAX_TOUCH_POINTS 16
+uniform vec2 uTouchPts[MAX_TOUCH_POINTS];
+uniform int numPts;
 
 void main()
 {
     vec3 col = .5*vfColor + vec3(.5);
-    vec2 tp = uTouchPt;
-    tp.y = 1. - tp.y;
-    float d = length(col.xy - tp);
-
-    col *= smoothstep(.1, 0., d);
-
+    float c = 0.;
+    for (int i=0; i<numPts; ++i)
+    {
+        vec2 tp = uTouchPts[i];
+        tp.y = 1. - tp.y;
+        float d = length(col.xy - tp);
+        c = max(c, smoothstep(.1, 0., d));
+    }
+    col *= c;
     fragColor = vec4(col, 1.0);
 }
 ]]
@@ -126,9 +133,30 @@ end
 
 local bright = 0
 function colorquad.render_for_one_eye(view, proj)
-    local utp_loc = gl.glGetUniformLocation(prog, "uTouchPt")
+    local utp_loc = gl.glGetUniformLocation(prog, "uTouchPts")
+    local unp_loc = gl.glGetUniformLocation(prog, "numPts")
     gl.glUseProgram(prog)
-    gl.glUniform2f(utp_loc, tx, ty)
+    
+    local i = 0
+    for k,v in pairs(pointers) do
+        i = i+1
+    end
+    pts = {}
+    for k,v in pairs(pointers) do
+        if v and v.x and v.y then
+            local x,y = v.x, -v.y
+            --x = 2*x - 1
+            --y = 2*y + 1
+            y = -y
+            table.insert(pts, x)
+            table.insert(pts, y)
+        end
+    end
+    
+    local num = i
+    gl.glUniform2fv(utp_loc, num, glFloatv(2*num, pts))
+    gl.glUniform1i(unp_loc, num)
+
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
@@ -139,8 +167,11 @@ function colorquad.timestep(absTime, dt)
 end
 
 function colorquad.onSingleTouch(pointerid, action, x, y)
-    --print("colorquad.onSingleTouch",pointerid, action, x, y)
-    tx,ty = x/winw, y/winh
+    pointers[pointerid] = {x=x/winw, y=y/winh}
+
+    if action == 1 or action == 6 then
+        pointers[pointerid] = nil
+    end
 end
 
 function colorquad.setBrightness(b)
