@@ -14,6 +14,10 @@ local glFloatv   = ffi.typeof('GLfloat[?]')
 local glConstCharpp = ffi.typeof('const GLchar *[1]')
 
 function load_and_compile_shader_source(src, type)
+    -- Version replacement for MacOS X's inadequate GL support
+    src = string.gsub(src, "#version 300 es", "#version 410")
+    src = string.gsub(src, "#version 310 es", "#version 410")
+
     local sourcep = glCharv(#src + 1)
     ffi.copy(sourcep, src)
     local sourcepp = glConstCharpp(sourcep)
