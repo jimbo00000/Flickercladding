@@ -70,10 +70,16 @@ local function init_cube_attributes()
     gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, vvbo)
 
+    local cols = glFloatv(3*3, {
+        1,1,1,
+        1,0,0,
+        1,1,0,
+        })
+
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
-    gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
+    gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(cols), cols, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, cvbo)
 
@@ -119,18 +125,27 @@ end
 function touchtris.render_for_one_eye(view, proj)
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
+    gl.glUseProgram(prog)
     local id = {}
     mm.make_identity_matrix(id)
-    local p = pointers[0]
-    if p then
-        mm.make_translation_matrix(id, -1+p.x, -1+1-p.y, 0)
-    end
-    gl.glUseProgram(prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, id))
-    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, id))
+
     gl.glBindVertexArray(vao)
-    gl.glDrawElements(GL.GL_TRIANGLES, 3, GL.GL_UNSIGNED_INT, nil)
+    do
+        local tx = {}
+        local p = pointers[0]
+        if p then
+            local x,y = p.x, -p.y
+            x = 2*x - 1
+            y = 2*y + 1
+            mm.make_translation_matrix(tx, x, y, 0)
+        gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, tx))
+        end
+
+        gl.glDrawElements(GL.GL_TRIANGLES, 3, GL.GL_UNSIGNED_INT, nil)
+    end
     gl.glBindVertexArray(0)
+
     gl.glUseProgram(0)
 end
 
