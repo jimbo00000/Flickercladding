@@ -154,52 +154,31 @@ local action_types = {
   [6] = "PointerUp",
 }
 
-local pointer_states = { }
+local pointers = {}
+local switched_flag = false
 
 function on_lua_singletouch(pointerid, action, x, y)
     --print("on_lua_singletouch", pointerid, action, x, y)
     if s.onSingleTouch then s.onSingleTouch(pointerid, action, x, y) end
 
-    local func_table = {
-        ["Down"] = function (pointerid, x, y)
-            pointer_states[pointerid] = {x=x, y=y, tx=x, ty=y, down=true}
-        end,
-        ["Up"] = function (pointerid, x, y)
-            local p = pointer_states[pointerid]
-            if p then p.down = false end
-        end,
-        ["PointerUp"] = function (pointerid, x, y)
-            local p = pointer_states[pointerid]
-            if p then p.down = false end
-        end,
-        ["Move"] = function (pointerid, x, y)
-            local p = pointer_states[pointerid]
-            if not p then
-                pointer_states[pointerid] = { x=x, y=y, tx=x, ty=y, down=true}
-                p = pointer_states[pointerid]
-            end
-            p.x,p.y = x,y
-        end,
-    }
+    pointers[pointerid] = {x=x/win_w, y=y/win_h}
+
     local actionflag = action % 255
     local a = action_types[actionflag]
-    if not a then return end
-    local f = func_table[a]
-    if f then f(pointerid, x, y) end
+    if a == "Up" or a == "PointerUp" then
+        pointers[pointerid] = nil
+    end
 
-
-    -- Pinch distance
-    local p0 = pointer_states[0]
-    local p1 = pointer_states[1]
-    if p0 and p1 then
-        local pdx = p0.x - p1.x
-        local pdy = p0.y - p1.y
-        local pd = math.sqrt(pdx*pdx + pdy+pdy)
-        --print("dist: "..pd)
-
-        if s.setBrightness then
-            s.setBrightness((pd-200) / 1000)
-        end
+    -- Check for 4 touches active at once to switch scene
+    local i = 0
+    for k,v in pairs(pointers) do
+        i = i+1
+    end
+    if i > 4 then
+        if not switched_flag then switch_scene(d) end
+        switched_flag = true
+    else
+        switched_flag = false
     end
 end
 
