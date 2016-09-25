@@ -76,7 +76,7 @@ bool init()
         "GL Skeleton - SDL2",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         winw, winh,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (g_pWindow == NULL)
     {
         LOG_ERROR("%s\n", SDL_GetError());
@@ -204,6 +204,9 @@ int main(int argc, char *argv[])
                     const float ey = event.tfinger.y * (float)h;
                     onSingleTouchEvent(event.tfinger.fingerId, ActionMove, ex, ey);
                 }
+                break;
+
+            case SDL_WINDOWEVENT_RESIZED:
                 break;
 
             case SDL_DROPFILE:
