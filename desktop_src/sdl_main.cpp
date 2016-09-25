@@ -146,14 +146,35 @@ int main(int argc, char *argv[])
                 if (event.key.keysym.sym == SDLK_ESCAPE)
                     quit = 1;
 
-                if (event.key.keysym.sym  == SDLK_F1)
+                // A handful of common window sizes
+                if (event.key.keysym.sym == SDLK_F1)
                 {
                     winw = 1000;
                     winh = 800;
                     portrait = !portrait;
                     setAppScreenSize();
                 }
-
+                else if (event.key.keysym.sym == SDLK_F2)
+                {
+                    winw = 2560 / 2;
+                    winh = 1440 / 2;
+                    portrait = !portrait;
+                    setAppScreenSize();
+                }
+                else if (event.key.keysym.sym == SDLK_F3)
+                {
+                    winw = 2048 / 2;
+                    winh = 1440 / 2;
+                    portrait = !portrait;
+                    setAppScreenSize();
+                }
+                else if (event.key.keysym.sym == SDLK_F4)
+                {
+                    winw = 640;
+                    winh = 480;
+                    portrait = !portrait;
+                    setAppScreenSize();
+                }
                 onKeyEvent(event.key.keysym.sym, 0, event.key.state, event.key.keysym.mod);
             }
             break;
