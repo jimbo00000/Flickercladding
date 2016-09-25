@@ -21,10 +21,17 @@ LuajitScene::LuajitScene()
 
 LuajitScene::~LuajitScene()
 {
+    exitLua();
+}
+
+void LuajitScene::exitLua()
+{
     if (m_Lua != NULL)
     {
         lua_close(m_Lua);
     }
+    m_errorOccurred = false;
+    m_errorText = "";
 }
 
 int LuajitScene::SetSceneName(const std::string& sceneName)

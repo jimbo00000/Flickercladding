@@ -386,5 +386,12 @@ void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
     case 9: // Tab in SDL2
         m_luaScene.ChangeScene(1);
         break;
+
+    case 1073741886: // F5 in SDL2
+        // Refresh Lua state
+        m_luaScene.exitLua();
+        m_luaScene.initGL();
+        m_luaScene.setWindowSize(m_winw, m_winh);
+        break;
     }
 }

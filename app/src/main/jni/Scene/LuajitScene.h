@@ -28,6 +28,7 @@ public:
     LuajitScene();
     virtual ~LuajitScene();
 
+    virtual void exitLua();
     virtual int SetSceneName(const std::string& sceneName);
     virtual void initGL();
     virtual void exitGL();
