@@ -179,6 +179,16 @@ void TabletWindow::_DrawText(int winw, int winh)
             col,
             proj,
             doKerning);
+
+        const float3 wh = { 1.f, 1.f, 1.f };
+        const std::string& err = m_luaScene.ErrorText();
+        pFont24->DrawString(
+            err.c_str(),
+            10,
+            y += lineh,
+            wh,
+            proj,
+            doKerning);
     }
     glDisable(GL_BLEND);
 }
