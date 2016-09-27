@@ -5,7 +5,7 @@ package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.pa
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
-local s = require("scene.colorquad")
+local Scene = require("scene.colorquad")
 
 local ANDROID = false
 local win_w,win_h = 800,800
@@ -29,15 +29,15 @@ end
 
 function switch_to_scene(name)
     print("switch_to_scene", name)
-    if s and s.exitGL then
-        s.exitGL()
+    if s and Scene.exitGL then
+        Scene.exitGL()
     end
     package.loaded[name] = nil
-    s = nil
+    Scene = nil
 
-    if not s then
-        s = require(name)
-        if s then
+    if not Scene then
+        Scene = require(name)
+        if Scene then
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             local dir = ""
             if ANDROID then
@@ -45,9 +45,9 @@ function switch_to_scene(name)
             else
                 dir = "../data/lua"
             end
-            if s.setDataDirectory then s.setDataDirectory(dir) end
-            if s.setWindowSize then s.setWindowSize(win_w, win_h) end
-            s.initGL()
+            if Scene.setDataDirectory then Scene.setDataDirectory(dir) end
+            if Scene.setWindowSize then Scene.setWindowSize(win_w, win_h) end
+            Scene.initGL()
         end
     end
 end
@@ -66,8 +66,8 @@ end
 function on_lua_draw(pmv, ppr)
     local mv = array_to_table(pmv)
     local pr = array_to_table(ppr)
-    s.render_for_one_eye(mv, pr)
-    if s.set_origin_matrix then s.set_origin_matrix(mv) end
+    Scene.render_for_one_eye(mv, pr)
+    if Scene.set_origin_matrix then Scene.set_origin_matrix(mv) end
 end
 
 function on_lua_initgl(pLoaderFunc)
@@ -77,14 +77,14 @@ function on_lua_initgl(pLoaderFunc)
         openGL = require("opengles3")
     else
         --[[
-            Now, the GL function loading business...
+            Now, the GL function loading businesScene...
             Everything in GL 1.2 or older has names in OpenGL32.dll/opengl32.dll (Windows),
             while pointers to all newer functions must be obtained from a loader function.
             Using the wglGetProcAddress provided by that dll will return NULL pointers for
-            all the old functions. Using glfwGetProcAddress takes care of both cases, but
+            all the old functionScene. Using glfwGetProcAddress takes care of both cases, but
             pulling it in via the ffi would be a redundant copy of GLFW, and would require
             an init of the second GLFW, which it might not even do. Instead, just pass the
-            pointer to to C++ app's GLFW's glfwGetProcAddress.
+            pointer to to C++ app's GLFW's glfwGetProcAddresScene.
 
             https://www.opengl.org/wiki/Load_OpenGL_Functions
             https://www.opengl.org/wiki/Talk%3aPlatform_specifics%3a_Windows
@@ -101,7 +101,7 @@ function on_lua_initgl(pLoaderFunc)
     end
     openGL:import()
 
-    if s then
+    if Scene then
         -- Instruct the scene where to load data from. Dir is relative to app's working dir.
         local dir = ""
         if pLoaderFunc == 0 then -- Assuming this means Android
@@ -110,38 +110,38 @@ function on_lua_initgl(pLoaderFunc)
         else
             dir = "../data/lua"
         end
-        if s.setDataDirectory then s.setDataDirectory(dir) end
-        s.initGL()
+        if Scene.setDataDirectory then Scene.setDataDirectory(dir) end
+        Scene.initGL()
     end
 end
 
 function on_lua_exitgl()
-    s.exitGL()
+    Scene.exitGL()
 end
 
 function on_lua_setscene(name)
     print("Lua Setting the scene to "..name)
 
-    s.exitGL()
+    Scene.exitGL()
 
     package.loaded[name] = nil
-    s = nil
+    Scene = nil
 
     if not s then
         base = string.sub(name, 0, -5)
         print("Base: "..base)
-        s = require("scene/"..base)
-        if s then
+        Scene = require("scene/"..base)
+        if Scene then
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-            if s.setDataDirectory then s.setDataDirectory(appDir.."/lua") end
-            if s.setWindowSize then s.setWindowSize(w, h) end
-            s.initGL()
+            if Scene.setDataDirectory then Scene.setDataDirectory(appDir.."/lua") end
+            if Scene.setWindowSize then Scene.setWindowSize(w, h) end
+            Scene.initGL()
         end
     end
 end
 
 function on_lua_timestep(absTime, dt)
-    s.timestep(absTime, dt)
+    Scene.timestep(absTime, dt)
 end
 
 local action_types = {
@@ -159,7 +159,7 @@ local switched_flag = false
 
 function on_lua_singletouch(pointerid, action, x, y)
     --print("on_lua_singletouch", pointerid, action, x, y)
-    if s.onSingleTouch then s.onSingleTouch(pointerid, action, x, y) end
+    if Scene.onSingleTouch then Scene.onSingleTouch(pointerid, action, x, y) end
 
     pointers[pointerid] = {x=x/win_w, y=y/win_h}
 
@@ -210,7 +210,7 @@ end
 
 function on_lua_setwindowsize(w, h)
     win_w,win_h = w,h
-    if s.setWindowSize then s.setWindowSize(w, h) end
+    if Scene.setWindowSize then Scene.setWindowSize(w, h) end
 end
 
 function on_lua_changescene(d)
