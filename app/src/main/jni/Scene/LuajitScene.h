@@ -29,7 +29,6 @@ public:
     virtual ~LuajitScene();
 
     virtual void exitLua();
-    virtual int SetSceneName(const std::string& sceneName);
     virtual void initGL();
     virtual void exitGL();
     virtual void keypressed(int key);

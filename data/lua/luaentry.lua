@@ -119,27 +119,6 @@ function on_lua_exitgl()
     Scene.exitGL()
 end
 
-function on_lua_setscene(name)
-    print("Lua Setting the scene to "..name)
-
-    Scene.exitGL()
-
-    package.loaded[name] = nil
-    Scene = nil
-
-    if not s then
-        base = string.sub(name, 0, -5)
-        print("Base: "..base)
-        Scene = require("scene/"..base)
-        if Scene then
-            -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-            if Scene.setDataDirectory then Scene.setDataDirectory(appDir.."/lua") end
-            if Scene.setWindowSize then Scene.setWindowSize(w, h) end
-            Scene.initGL()
-        end
-    end
-end
-
 function on_lua_timestep(absTime, dt)
     Scene.timestep(absTime, dt)
 end

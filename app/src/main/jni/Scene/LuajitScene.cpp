@@ -34,20 +34,6 @@ void LuajitScene::exitLua()
     m_errorText = "";
 }
 
-int LuajitScene::SetSceneName(const std::string& sceneName)
-{
-    lua_State *L = m_Lua;
-    lua_getglobal(L, "on_lua_setscene");
-    lua_pushlstring(L, sceneName.c_str(), sceneName.length());
-    if (lua_pcall(L, 1, 0, 0) != 0)
-    {
-        LOG_INFO("Error running function `on_lua_setscene': %s", lua_tostring(L, -1));
-        m_errorOccurred = true;
-        return 1;
-    }
-    return 0;
-}
-
 // http://stackoverflow.com/questions/4508119/redirecting-redefining-print-for-embedded-lua
 static int l_my_print(lua_State* L) {
     int nargs = lua_gettop(L);
