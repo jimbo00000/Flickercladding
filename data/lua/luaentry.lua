@@ -6,9 +6,12 @@ package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.pa
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
 local Scene = nil
+local fnt = require("util.fontfunctions")
+local mm = require("util.matrixmath")
 
 local ANDROID = false
 local win_w,win_h = 800,800
+local lastSceneChangeTime = 0
 
 local scene_modules = {
     "scene.touchtris",
@@ -38,6 +41,7 @@ function switch_to_scene(name)
     if not Scene then
         Scene = require(name)
         if Scene then
+            local now = os.clock()
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             local dir = ""
             if ANDROID then
@@ -48,8 +52,38 @@ function switch_to_scene(name)
             if Scene.setDataDirectory then Scene.setDataDirectory(dir) end
             if Scene.setWindowSize then Scene.setWindowSize(win_w, win_h) end
             Scene.initGL()
+            local initTime = os.clock() - now
+            print(name.." initGL: "..math.floor(1000*initTime).."ms")
+            lastSceneChangeTime = now
         end
     end
+end
+
+local function display_scene_overlay()
+    if not fnt then return end
+
+    local showTime = 2
+    local age = os.clock() - lastSceneChangeTime
+    -- TODO a nice fade or something
+    if age > showTime then return end
+
+    local m = {}
+    local p = {}
+    mm.make_identity_matrix(m)
+    local s = .5
+    mm.glh_scale(m, s, s, s)
+
+    local yoff = 0
+    local tin = .15
+    local tout = .5
+    local yslide = -250
+    if age < tin then yoff = yslide * (1-age/tin) end
+    if age > showTime - tout then yoff = yslide * (age-(showTime-tout)) end
+    mm.glh_translate(m, 30, yoff, 0)
+    -- TODO getStringWidth and center text
+    mm.glh_ortho(p, 0, win_w, win_h, 0, -1, 1)
+    gl.glDisable(GL.GL_DEPTH_TEST)
+    fnt.render_string(m, p, scene_modules[scene_module_idx])
 end
 
 -- Cast the array cdata ptr(passes from glm::value_ptr(glm::mat4),
@@ -68,6 +102,7 @@ function on_lua_draw(pmv, ppr)
     local pr = array_to_table(ppr)
     Scene.render_for_one_eye(mv, pr)
     if Scene.set_origin_matrix then Scene.set_origin_matrix(mv) end
+    display_scene_overlay()
 end
 
 function on_lua_initgl(pLoaderFunc)
@@ -75,6 +110,7 @@ function on_lua_initgl(pLoaderFunc)
     if pLoaderFunc == 0 then
         print("No loader function - initializing GLES 3")
         openGL = require("opengles3")
+        ANDROID = true -- an assumption
     else
         --[[
             Now, the GL function loading businesScene...
@@ -102,10 +138,23 @@ function on_lua_initgl(pLoaderFunc)
     openGL:import()
 
     switch_to_scene(scene_modules[scene_module_idx])
+
+    if fnt then
+        -- Instruct the scene where to load data from. Dir is relative to app's working dir.
+        local dir = ""
+        if ANDROID then
+            dir = appDir.."/lua"
+        else
+            dir = "../data/lua"
+        end
+        if fnt.setDataDirectory then fnt.setDataDirectory(dir) end
+        fnt.initGL()
+    end
 end
 
 function on_lua_exitgl()
     Scene.exitGL()
+    fnt.exitGL()
 end
 
 function on_lua_timestep(absTime, dt)
