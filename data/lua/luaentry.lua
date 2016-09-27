@@ -5,7 +5,7 @@ package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.pa
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
-local Scene = require("scene.colorquad")
+local Scene = nil
 
 local ANDROID = false
 local win_w,win_h = 800,800
@@ -101,18 +101,7 @@ function on_lua_initgl(pLoaderFunc)
     end
     openGL:import()
 
-    if Scene then
-        -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-        local dir = ""
-        if pLoaderFunc == 0 then -- Assuming this means Android
-            dir = appDir.."/lua"
-            ANDROID = true
-        else
-            dir = "../data/lua"
-        end
-        if Scene.setDataDirectory then Scene.setDataDirectory(dir) end
-        Scene.initGL()
-    end
+    switch_to_scene(scene_modules[scene_module_idx])
 end
 
 function on_lua_exitgl()
