@@ -14,6 +14,7 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
+    "scene.fonttest_scene",
     "scene.floorquad",
     "scene.touchtris",
     "scene.colorquad",
@@ -148,6 +149,7 @@ function on_lua_initgl(pLoaderFunc)
     else
         dir = "../data/lua"
     end
+    dir = dir .. "/fonts"
     glfont = GLFont.new('segoe_ui128.fnt', 'segoe_ui128_0.raw')
     glfont:setDataDirectory(dir)
     glfont:initGL()
