@@ -190,7 +190,7 @@ void LuajitScene::timestep(double absTime, double dt)
     if (m_changeSceneOnNextTimestep)
     {
         lua_getglobal(L, "on_lua_changescene");
-        lua_pushinteger(L, 1);
+        lua_pushinteger(L, 0);
         if (lua_pcall(L, 1, 0, 0) != 0)
         {
             LOG_INFO("Error running function `on_lua_changescene': %s", lua_tostring(L, -1));

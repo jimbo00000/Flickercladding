@@ -15,10 +15,13 @@ local lastSceneChangeTime = 0
 
 local scene_modules = {
     "scene.fonttest_scene",
-    "scene.floorquad",
-    "scene.touchtris",
-    "scene.colorquad",
-    "scene.clockface",
+    "scene.cubescene2",
+    "scene.shadertoy_scene2",
+    "scene.hybrid_scene",
+    --"scene.floorquad",
+    --"scene.touchtris",
+    --"scene.colorquad",
+    --"scene.clockface",
 }
 local scene_module_idx = 1
 function switch_scene(reverse)
@@ -200,7 +203,7 @@ function on_lua_singletouch(pointerid, action, x, y)
         i = i+1
     end
     if i > 4 then
-        if not switched_flag then switch_scene(d) end
+        if not switched_flag then switch_scene(false) end
         switched_flag = true
     else
         switched_flag = false
@@ -239,5 +242,5 @@ function on_lua_setwindowsize(w, h)
 end
 
 function on_lua_changescene(d)
-    switch_scene(d)
+    switch_scene(d ~= 0)
 end
