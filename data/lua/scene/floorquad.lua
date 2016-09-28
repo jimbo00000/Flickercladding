@@ -58,10 +58,10 @@ void main()
 local function init_cube_attributes()
     local s = 10
     local verts = glFloatv(4*3, {
-        0,0,0,
-        s,0,0,
+        -s,0,-s,
+        s,0,-s,
         s,0,s,
-        0,0,s,
+        -s,0,s,
         })
 
     local vvbo = glIntv(0)
