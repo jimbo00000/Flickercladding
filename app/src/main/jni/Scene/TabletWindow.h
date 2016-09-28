@@ -58,6 +58,7 @@ protected:
     TouchPoints m_tp;
     std::pair<touchState, touchState> m_pinchStart;
     float m_scaleAtPinchStart;
+    bool m_movingChassisFlag;
 
 public:
     void* m_pLoaderFunc;

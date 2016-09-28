@@ -29,6 +29,7 @@ TabletWindow::TabletWindow()
 , m_lastTouchPoint(0,0)
 , m_chassisYaw(0.f)
 , m_chassisYawAtTouch(0.f)
+, m_movingChassisFlag(false)
 {
     m_chassisPos.x = 0.f;
     m_chassisPos.y = -.6f;
@@ -114,41 +115,45 @@ void TabletWindow::_DrawText(int winw, int winh)
         int y = 40 - lineh;
         const float3 col = {.5f, 1.f, .5f};
         const bool doKerning = true;
-        pFont24->DrawWString(
+
+        if (m_movingChassisFlag)
+        {
+            pFont24->DrawWString(
 #ifdef __ANDROID__
-            L"Flickercladding - Android",
+                L"Flickercladding - Android",
 #else
-            L"Flickercladding - Desktop",
+                L"Flickercladding - Desktop",
 #endif
-            10,
-            y += lineh,
-            col,
-            proj,
-            doKerning);
+                10,
+                y += lineh,
+                col,
+                proj,
+                doKerning);
 
-        pFont24->DrawString(
-            m_glVersion.c_str(),
-            10,
-            y += lineh,
-            col,
-            proj,
-            doKerning);
+            pFont24->DrawString(
+                m_glVersion.c_str(),
+                10,
+                y += lineh,
+                col,
+                proj,
+                doKerning);
 
-        pFont24->DrawString(
-            m_glRenderer.c_str(),
-            10,
-            y += lineh,
-            col,
-            proj,
-            doKerning);
+            pFont24->DrawString(
+                m_glRenderer.c_str(),
+                10,
+                y += lineh,
+                col,
+                proj,
+                doKerning);
 
-        pFont24->DrawString(
-            m_glSLVersion.c_str(),
-            10,
-            y += lineh,
-            col,
-            proj,
-            doKerning);
+            pFont24->DrawString(
+                m_glSLVersion.c_str(),
+                10,
+                y += lineh,
+                col,
+                proj,
+                doKerning);
+        }
 
         std::ostringstream oss;
         oss << m_fps.GetFPS() << " fps";
@@ -266,7 +271,11 @@ int getNumPointersDown(int mask)
 void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
 {
     const int actionflag = action & 0xff;
-    m_luaScene.onSingleTouch(pointerid, actionflag, x, y);
+
+    if (m_movingChassisFlag == false)
+    {
+        m_luaScene.onSingleTouch(pointerid, actionflag, x, y);
+    }
 
     const int pointerflag = 1 << pointerid;
 
@@ -314,21 +323,24 @@ void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
     {
         if (getNumPointersDown(m_holdingMask) == 2)
         {
-            const touchState& t0 = m_pinchStart.first;
-            const touchState& t1 = m_pinchStart.second;
-            const float3 a0 = {static_cast<float>(t0.x),static_cast<float>(t0.y),0};
-            const float3 a1 = {static_cast<float>(t1.x),static_cast<float>(t1.y),0};
-            const float initialDist = length(a1 - a0);
-            const touchState& u0 = m_pointerStates[0];
-            const touchState& u1 = m_pointerStates[1];
-            const float3 b0 = {static_cast<float>(u0.x),static_cast<float>(u0.y),0};
-            const float3 b1 = {static_cast<float>(u1.x),static_cast<float>(u1.y),0};
-            const float curDist = length(b1 - b0);
-            if (initialDist != 0.f)
+            if (m_movingChassisFlag)
             {
-                //m_iconScale = curDist / initialDist;
-                const float dz = .02f * (curDist - initialDist);
-                m_chassisPos.z = m_chassisPosAtTouch.z + dz;
+                const touchState& t0 = m_pinchStart.first;
+                const touchState& t1 = m_pinchStart.second;
+                const float3 a0 = { static_cast<float>(t0.x),static_cast<float>(t0.y),0 };
+                const float3 a1 = { static_cast<float>(t1.x),static_cast<float>(t1.y),0 };
+                const float initialDist = length(a1 - a0);
+                const touchState& u0 = m_pointerStates[0];
+                const touchState& u1 = m_pointerStates[1];
+                const float3 b0 = { static_cast<float>(u0.x),static_cast<float>(u0.y),0 };
+                const float3 b1 = { static_cast<float>(u1.x),static_cast<float>(u1.y),0 };
+                const float curDist = length(b1 - b0);
+                if (initialDist != 0.f)
+                {
+                    //m_iconScale = curDist / initialDist;
+                    const float dz = .02f * (curDist - initialDist);
+                    m_chassisPos.z = m_chassisPosAtTouch.z + dz;
+                }
             }
         }
     }
@@ -341,14 +353,14 @@ void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
         {
             if ((actionflag == ActionDown) || (actionflag == ActionMove))
             {
-                //m_iconx = x;
-                //m_icony = y;
-                const int dx = x - m_lastTouchPoint.x;
-                const int dy = y - m_lastTouchPoint.y;
-                //m_chassisPos.x = m_chassisPosAtTouch.x + (.01f * (float)dx);
-                m_chassisPos.y = m_chassisPosAtTouch.y - (.01f * (float)dy);
-
-                m_chassisYaw = m_chassisYawAtTouch + (.1f * (float)dx);
+                if (m_movingChassisFlag)
+                {
+                    const int dx = x - m_lastTouchPoint.x;
+                    const int dy = y - m_lastTouchPoint.y;
+                    //m_chassisPos.x = m_chassisPosAtTouch.x + (.01f * (float)dx);
+                    m_chassisPos.y = m_chassisPosAtTouch.y - (.01f * (float)dy);
+                    m_chassisYaw = m_chassisYawAtTouch + (.1f * (float)dx);
+                }
             }
         }
     }
@@ -371,6 +383,10 @@ void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
     case 258: // Tab in GLFW3
     case 9: // Tab in SDL2
         m_luaScene.ChangeScene(1);
+        break;
+
+    case 96: // ` in SDL2
+        m_movingChassisFlag = !m_movingChassisFlag;
         break;
 
     case 1073741886: // F5 in SDL2
