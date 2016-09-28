@@ -36,21 +36,20 @@ function BMFont:init(fontfile, imagefile, filtering)
     -- read glyphs from font.txt and store them in chars table
     self.chars = {}
     file = io.open(fontfile, "rt")
-    if not file then return end
+    if not file then print("File not found: "..fontfile) return end
     for line in file:lines() do
         if startsWith(line, "char ") then
             local char = lineToTable(line)
             self.chars[char.id] = char
         end
     end
-
     io.close(file)
 end
 
 function BMFont:getcharquad(ch, x, y, tw, th)
-    if not ch then return end
+    if not ch then return nil, nil, nil end
     local char = self.chars[ch]
-    if not char then return end
+    if not char then return nil, nil, nil end
 
     local cx, cy = char.x, char.y
     local cw, ch = char.width, char.height

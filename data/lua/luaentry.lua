@@ -6,7 +6,7 @@ package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.pa
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
 local Scene = nil
-local fnt = require("util.fontfunctions")
+require("util.glfont")
 local mm = require("util.matrixmath")
 
 local ANDROID = false
@@ -61,7 +61,7 @@ function switch_to_scene(name)
 end
 
 local function display_scene_overlay()
-    if not fnt then return end
+    if not glfont then return end
 
     local showTime = 2
     local age = os.clock() - lastSceneChangeTime
@@ -84,7 +84,7 @@ local function display_scene_overlay()
     -- TODO getStringWidth and center text
     mm.glh_ortho(p, 0, win_w, win_h, 0, -1, 1)
     gl.glDisable(GL.GL_DEPTH_TEST)
-    fnt.render_string(m, p, scene_modules[scene_module_idx])
+    glfont:render_string(m, p, scene_modules[scene_module_idx])
 end
 
 -- Cast the array cdata ptr(passes from glm::value_ptr(glm::mat4),
@@ -140,14 +140,19 @@ function on_lua_initgl(pLoaderFunc)
 
     switch_to_scene(scene_modules[scene_module_idx])
 
+
+    -- Instruct the scene where to load data from. Dir is relative to app's working dir.
+    local dir = ""
+    if ANDROID then
+        dir = appDir.."/lua"
+    else
+        dir = "../data/lua"
+    end
+    glfont = GLFont.new('segoe_ui128.fnt', 'segoe_ui128_0.raw')
+    glfont:setDataDirectory(dir)
+    glfont:initGL()
+
     if fnt then
-        -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-        local dir = ""
-        if ANDROID then
-            dir = appDir.."/lua"
-        else
-            dir = "../data/lua"
-        end
         if fnt.setDataDirectory then fnt.setDataDirectory(dir) end
         fnt.initGL()
     end
@@ -155,7 +160,7 @@ end
 
 function on_lua_exitgl()
     Scene.exitGL()
-    fnt.exitGL()
+    glfont:exitGL()
 end
 
 function on_lua_timestep(absTime, dt)
