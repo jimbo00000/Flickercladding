@@ -315,8 +315,25 @@ void TabletWindow::OnSingleTouch(int pointerid, int action, int x, int y)
     {
         if (getNumPointersDown(m_holdingMask) == 2)
         {
-            m_pinchStart.first = m_pointerStates[0];
-            m_pinchStart.second = m_pointerStates[1];
+            const touchState& p0 = m_pointerStates[0];
+            const touchState& p1 = m_pointerStates[1];
+            m_pinchStart.first = p0;
+            m_pinchStart.second = p1;
+
+            // Check for double touch on lower corners of screen
+            const touchState& leftPt = p0.x < p1.x ? p0 : p1;
+            const touchState& rightPt = p0.x < p1.x ? p1 : p0;
+            const int xm = m_winw / 10;
+            const int ym = m_winh / 10;
+            if (
+                (leftPt.x < xm) &&
+                (leftPt.y > m_winh - ym) &&
+                (rightPt.x > m_winw - xm) &&
+                (rightPt.y > m_winh - ym)
+                )
+            {
+                m_movingChassisFlag = !m_movingChassisFlag;
+            }
         }
     }
     else if (actionflag == ActionMove)
