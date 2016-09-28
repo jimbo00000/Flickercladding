@@ -14,15 +14,15 @@ local vao = 0
 local prog = 0
 
 local basic_vert = [[
-#version 300 es
+#version 310 es
 
-in vec4 vPosition;
-in vec4 vColor;
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec4 vColor;
 
 out vec2 vfTexCoord;
 
-uniform mat4 mvmtx;
-uniform mat4 prmtx;
+layout(location = 0) uniform mat4 mvmtx;
+layout(location = 1) uniform mat4 prmtx;
 
 void main()
 {
@@ -33,10 +33,10 @@ void main()
 
 
 local basic_frag = [[
-#version 300 es
+#version 310 es
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 precision mediump int;
 #endif
 
@@ -64,25 +64,22 @@ local function init_cube_attributes()
         0,0,s,
         })
 
-    local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
-    local vcol_loc = gl.glGetAttribLocation(prog, "vColor")
-
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, cvbo)
 
-    gl.glEnableVertexAttribArray(vpos_loc)
-    gl.glEnableVertexAttribArray(vcol_loc)
+    gl.glEnableVertexAttribArray(0)
+    gl.glEnableVertexAttribArray(1)
 
     local quads = glUintv(6*6, {
         0,1,2,
@@ -122,11 +119,9 @@ function floorquad.exitGL()
 end
 
 function floorquad.render_for_one_eye(view, proj)
-    local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
-    local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
     gl.glUseProgram(prog)
-    gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
-    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, view))
+    gl.glUniformMatrix4fv(0, 1, GL.GL_FALSE, glFloatv(16, view))
+    gl.glUniformMatrix4fv(1, 1, GL.GL_FALSE, glFloatv(16, proj))
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 3*2, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
