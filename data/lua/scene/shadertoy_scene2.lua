@@ -37,7 +37,7 @@ local rm_frag = [[
 #version 310 es
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 precision mediump int;
 #endif
 
@@ -62,7 +62,7 @@ uniform mat4 prmtx;
 // @var headSize 6.0
 // @var eyePos -2.5952096 5.4259381 -20.277588
 
-const int max_iterations = 64;
+const int max_iterations = 255;
 const float stop_threshold = 0.001;
 const float grad_step = 0.1;
 const float clip_far = 1000.0;
