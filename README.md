@@ -3,7 +3,7 @@ Flickercladding
 
 A flexible, colorful computational covering for [boppers](http://www.rudyrucker.com/wares/html/).
 
-![Flickercladding logos](Flickercladding_logos_260.png)
+![Flickercladding logos](MoonbotLogo_399.png)
 
 [Android](https://www.android.com/), the OS, is the base used as a platform for [LuaJIT](http://luajit.org/), which can call into [OpenGL](https://www.opengl.org/).
 
