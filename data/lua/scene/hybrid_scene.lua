@@ -35,19 +35,20 @@ function hybrid_scene.render_for_one_eye(view, proj)
     sts.render_for_one_eye(view, proj)
     cbs.render_for_one_eye(view, proj)
 
+    local col = {1, 1, 1}
     local m = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}
     local s = .002
     mm.glh_translate(m, -1, .8, .5)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
-    glfont:render_string(m, proj, "Raymarched CSG Shape")
+    glfont:render_string(m, proj, col, "Raymarched CSG Shape")
 
     local m = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}
     local s = .002
     mm.glh_translate(m, 1, 0.2, -.5)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
-    glfont:render_string(m, proj, "Rasterized cubes")
+    glfont:render_string(m, proj, col, "Rasterized cubes")
 end
 
 function hybrid_scene.timestep(absTime, dt)

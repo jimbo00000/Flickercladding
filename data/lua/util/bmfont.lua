@@ -30,10 +30,8 @@ function BMFont.new(...)
 end
 
 function BMFont:init(fontfile, imagefile, filtering)
-    -- load font texture
-    --self.texture = Texture.new(imagefile, filtering)
-
-    -- read glyphs from font.txt and store them in chars table
+    -- Read character layout from BMFont's .fnt
+    -- and store them in chars table.
     self.chars = {}
     file = io.open(fontfile, "rt")
     if not file then print("File not found: "..fontfile) return end
@@ -41,6 +39,10 @@ function BMFont:init(fontfile, imagefile, filtering)
         if startsWith(line, "char ") then
             local char = lineToTable(line)
             self.chars[char.id] = char
+        elseif startsWith(line, "info ") then
+            self.info = lineToTable(line)
+        elseif startsWith(line, "common ") then
+            self.common = lineToTable(line)
         end
     end
     io.close(file)

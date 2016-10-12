@@ -14,6 +14,8 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
+    "scene.stringedit_scene",
+    "scene.vsfstri",
     "scene.fonttest_scene",
     "scene.cubescene2",
     "scene.shadertoy_scene2",

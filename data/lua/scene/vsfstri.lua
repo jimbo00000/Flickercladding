@@ -88,7 +88,6 @@ local function init_cube_attributes()
 end
 
 function vsfstri.initGL()
-    print("XXXXX INIT GL")
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     vao = vaoId[0]

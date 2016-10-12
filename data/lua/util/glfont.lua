@@ -1,5 +1,4 @@
--- fontfunctions.lua
-fontfunctions = {}
+-- glfont.lua
 
 require("opengl")
 require("util.bmfont")
@@ -26,13 +25,12 @@ local string_vbo_table = {}
 
 local dataDir = nil
 local tex_w, tex_h
-fontfunctions.fogDist = 10
 
 local basic_vert = [[
 #version 310 es
 
-in vec4 vPosition;
-in vec4 vColor;
+layout(location = 0) in vec4 vPosition;
+layout(location = 1) in vec4 vColor;
 out vec3 vfColor;
 
 layout(location = 0) uniform mat4 mvmtx;
@@ -41,14 +39,6 @@ layout(location = 1) uniform mat4 prmtx;
 void main()
 {
     vfColor = vColor.xyz;
-
-    // Billboard quads to face camera
-    vec4 txpt =
-        mvmtx * vec4(0.,0.,0.,1.)
-        + vec4(-2., 4.5, 1., 0.)
-        + .015 * vec4(1.,-1.,1.,1.) * vec4(vPosition.xy, 0., 1.);
-
-    //gl_Position = prmtx * txpt;
     gl_Position = prmtx * mvmtx * vPosition;
 }
 ]]
@@ -65,17 +55,13 @@ in vec3 vfColor;
 out vec4 fragColor;
 
 layout(location = 2) uniform sampler2D tex;
-layout(location = 3) uniform float u_fogDist;
+layout(location = 3) uniform vec3 uColor;
 
 void main()
 {
-    float dist = gl_FragCoord.z / gl_FragCoord.w;
-    float m = 1.-exp(-dist/u_fogDist);
-    vec3 fogCol = vec3(0.);
-    float colBoost = 1.3;
-    vec3 texCol = colBoost * texture(tex, vfColor.xy).xyz;
-
-    fragColor = texCol.xyzx;
+    vec3 texCol = texture(tex, vfColor.xy).xyz;
+    float lum = length(texCol);
+    fragColor = vec4(uColor, lum);
 }
 ]]
 
@@ -166,11 +152,16 @@ function GLFont:exitGL()
     local vaoId = ffi.new("GLuint[1]", self.vao)
     gl.glDeleteVertexArrays(1, vaoId)
 
-    self.string_vbo_table = {}
+    for k,v in pairs(self.string_vbo_table) do
+        local vv,vt = v[1], v[2]
+        gl.glDeleteBuffers(1,vv)
+        gl.glDeleteBuffers(1,vt)
+    end
     self.font.chars = {}
 end
 
-function GLFont:render_string(mview, proj, str)
+function GLFont:render_string(mview, proj, color, str)
+    if not str then return end
     if #str == 0 then return end
     if self.prog == 0 then return end
 
@@ -182,7 +173,7 @@ function GLFont:render_string(mview, proj, str)
     gl.glBindTexture(GL.GL_TEXTURE_2D, self.tex)
     gl.glUniform1i(2, 0)
 
-    gl.glUniform1f(3, 10)--fontfunctions.fogDist)
+    gl.glUniform3f(3, color[1], color[2], color[3])
 
     gl.glEnable(GL.GL_BLEND)
     gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -242,6 +233,7 @@ function GLFont:render_string(mview, proj, str)
         end
     else
         local strVBO = self.string_vbo_table[str]
+        strVBO.age = 0
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, strVBO[1][0])
         gl.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, strVBO[2][0])
@@ -257,4 +249,50 @@ function GLFont:render_string(mview, proj, str)
     gl.glDisable(GL.GL_BLEND)
 
     gl.glUseProgram(0)
+end
+
+function GLFont:get_string_width(str)
+    if #str == 0 then return 0 end
+
+    local w = 0
+    for i=1,#str do
+        local ch = str:byte(i)
+        if ch ~= nil then
+            local v, t, xa = self.font:getcharquad(ch, x, y, self.tex_w, self.tex_h)
+            if v and t then
+                w = w + xa
+            end
+        end
+    end
+    return w
+end
+
+function GLFont:get_max_char_width()
+    local mx = 0
+    for k,v in pairs(self.font.chars) do
+        mx = math.max(mx, v.xadvance)
+    end
+    return mx
+end
+
+function GLFont:stringcount()
+    local count = 0
+    for _ in pairs(self.string_vbo_table) do count = count + 1 end
+    return count
+end
+
+function GLFont:deleteoldstrings()
+    for k,v in pairs(self.string_vbo_table) do
+        if v.age and v.age > 100 then
+            local vv,vt = v[1], v[2]
+            gl.glDeleteBuffers(1,vv)
+            gl.glDeleteBuffers(1,vt)
+            self.string_vbo_table[k] = nil
+        end
+        if v.age then
+            v.age = v.age + 1 or 1
+        else
+            v.age = 1
+        end
+    end
 end

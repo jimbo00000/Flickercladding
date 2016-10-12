@@ -30,6 +30,7 @@ function fonttest_scene.initGL()
 end
 
 function fonttest_scene.exitGL()
+    glfont:exitGL()
 end
 
 function fonttest_scene.render_for_one_eye(view, proj)
@@ -39,9 +40,10 @@ function fonttest_scene.render_for_one_eye(view, proj)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
 
+    local col = {1, 1, 1}
     local lh = 90
     for k,v in pairs(lines) do
-        glfont:render_string(m, proj, v)
+        glfont:render_string(m, proj, col, v)
         mm.glh_translate(m, 0, lh, 0)
     end
 end
