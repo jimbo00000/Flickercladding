@@ -30,8 +30,8 @@ local fbo = nil
 local fbw, fbh = 2048/2,1024/2
 local textscale = .0008
 local max_charw = 0
-local editFilename = '../data/lua/scene/vsfstri.lua'
-local draw_fbo = true
+local editFilename = 'scene/vsfstri.lua'
+local draw_fbo = false
 local visibleLines = 26 -- TODO: figure this out based on size
 
 
@@ -285,6 +285,7 @@ end
 
 function stringedit_scene.setDataDirectory(dir)
     dataDir = dir
+    editFilename = dataDir.."/"..editFilename
 end
 
 function stringedit_scene.initGL()
