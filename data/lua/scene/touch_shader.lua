@@ -1,35 +1,48 @@
--- colorquad.lua
-colorquad = {}
+--[[ touch_shader.lua
+
+    Draws touch points to with a fragment shader.
+
+    A single quad is initialized with attributes to fill the screen.
+    Touch points are passed as uniforms to a fragment shader that draws
+    to every pixel on the screen. The frag shader loopsover all touch
+    points, checking if a given pixel is within a given range of any
+    of them. If so, it lights up with color.
+
+    Similar to the touchtris scene, pointer(touch) events come in through
+    the onSingleTouch function and are stored in a module-local array.
+    Instead of looping through the triangles on CPU(in Lua) as in
+    touchtris, we pass in all touch points as a uniform array to the shader.
+]]
+touch_shader = {}
 
 --local openGL = require("opengl")
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
 
-local glIntv     = ffi.typeof('GLint[?]')
-local glUintv    = ffi.typeof('GLuint[?]')
-local glFloatv   = ffi.typeof('GLfloat[?]')
+local glIntv   = ffi.typeof('GLint[?]')
+local glUintv  = ffi.typeof('GLuint[?]')
+local glFloatv = ffi.typeof('GLfloat[?]')
 
 local vbos = {}
 local vao = 0
 local prog = 0
 
-local winw, winh = 1000,1000
-local tx,ty = 0,0
-local pointers = { }
+local winw, winh = 0,0 -- Window size in pixels
+local pointers = {} -- List of pointer states
 
 
 local basic_vert = [[
 #version 300 es
 
-in vec4 vPosition;
-in vec4 vColor;
+in vec2 vPosition;
+in vec2 vColor;
 
 out vec3 vfColor;
 
 void main()
 {
-    vfColor = vColor.xyz;
-    gl_Position = vPosition;
+    vfColor = vec3(vColor, 0.);
+    gl_Position = vec4(vPosition, 0., 1.);
 }
 ]]
 
@@ -44,7 +57,7 @@ precision mediump int;
 
 in vec3 vfColor;
 out vec4 fragColor;
-#line 46
+
 #define MAX_TOUCH_POINTS 16
 uniform vec2 uTouchPts[MAX_TOUCH_POINTS];
 uniform int numPts;
@@ -67,11 +80,11 @@ void main()
 
 
 local function init_cube_attributes()
-    local verts = glFloatv(4*3, {
-        -1,-1,0,
-        1,-1,0,
-        1,1,0,
-        -1,1,0,
+    local verts = glFloatv(4*2, {
+        -1,-1,
+        1,-1,
+        1,1,
+        -1,1,
         })
 
     local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
@@ -81,14 +94,14 @@ local function init_cube_attributes()
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(vcol_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, cvbo)
 
     gl.glEnableVertexAttribArray(vpos_loc)
@@ -105,7 +118,7 @@ local function init_cube_attributes()
     table.insert(vbos, qvbo)
 end
 
-function colorquad.initGL()
+function touch_shader.initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     vao = vaoId[0]
@@ -120,7 +133,7 @@ function colorquad.initGL()
     gl.glBindVertexArray(0)
 end
 
-function colorquad.exitGL()
+function touch_shader.exitGL()
     gl.glBindVertexArray(vao)
     for _,v in pairs(vbos) do
         gl.glDeleteBuffers(1,v)
@@ -132,22 +145,21 @@ function colorquad.exitGL()
 end
 
 local bright = 0
-function colorquad.render_for_one_eye(view, proj)
+function touch_shader.render_for_one_eye(view, proj)
     local utp_loc = gl.glGetUniformLocation(prog, "uTouchPts")
     local unp_loc = gl.glGetUniformLocation(prog, "numPts")
     gl.glUseProgram(prog)
     
+    -- The array may be sparse, so we can't just use #v
     local i = 0
     for k,v in pairs(pointers) do
         i = i+1
     end
+    -- Assemble array of touch points to pass in as uniform
     pts = {}
     for k,v in pairs(pointers) do
         if v and v.x and v.y then
-            local x,y = v.x, -v.y
-            --x = 2*x - 1
-            --y = 2*y + 1
-            y = -y
+            local x,y = v.x, v.y
             table.insert(pts, x)
             table.insert(pts, y)
         end
@@ -163,10 +175,10 @@ function colorquad.render_for_one_eye(view, proj)
     gl.glUseProgram(0)
 end
 
-function colorquad.timestep(absTime, dt)
+function touch_shader.timestep(absTime, dt)
 end
 
-function colorquad.onSingleTouch(pointerid, action, x, y)
+function touch_shader.onSingleTouch(pointerid, action, x, y)
     pointers[pointerid] = {x=x/winw, y=y/winh}
 
     if action == 1 or action == 6 then
@@ -174,12 +186,12 @@ function colorquad.onSingleTouch(pointerid, action, x, y)
     end
 end
 
-function colorquad.setBrightness(b)
+function touch_shader.setBrightness(b)
     bright = b
 end
 
-function colorquad.setWindowSize(w,h)
+function touch_shader.setWindowSize(w,h)
     winw, winh = w,h
 end
 
-return colorquad
+return touch_shader

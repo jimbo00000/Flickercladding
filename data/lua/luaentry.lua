@@ -23,7 +23,7 @@ local scene_modules = {
     "scene.hybrid_scene",
     --"scene.floorquad",
     "scene.touchtris",
-    "scene.colorquad",
+    "scene.touch_shader",
 }
 local scene_module_idx = 1
 function switch_scene(reverse)
