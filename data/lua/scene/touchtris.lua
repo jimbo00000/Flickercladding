@@ -1,4 +1,19 @@
--- touchtris.lua
+--[[ touchtris.lua
+
+    Draws a triangle over each tracked touch pointer.
+
+    Touch events are delivered via the function onSingleTouch.
+    When a touch event arrives, its state is saved in a local array
+    so triangles can be drawn over each touch point.
+
+    Touch points are delivered in pixel coordinates from the window,
+    so we have to keep track of how big the window is in pixels.
+    This information is delivered via the setWindowSize function.
+    Touch pointer state is stored in normalized [0,1] coordinates
+    which are obtained by simply dividing coords by window size.
+    When drawing is done, the [0,1] interval is stratched over
+    the entire viewport(screen).
+]]
 touchtris = {}
 
 --local openGL = require("opengl")
@@ -13,8 +28,9 @@ local glFloatv   = ffi.typeof('GLfloat[?]')
 local vbos = {}
 local vao = 0
 local prog = 0
-local winw,winh = 0,0
-local pointers = {}
+
+local winw,winh = 0,0 -- Window dimension in pixels
+local pointers = {} -- Holds state of pointers for drawing
 
 local basic_vert = [[
 #version 300 es
@@ -57,7 +73,7 @@ local function init_cube_attributes()
     local verts = glFloatv(3*3, {
         0,0,0,
         1,0,0,
-        1,1,0,
+        0,1,0,
         })
 
     local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
@@ -122,6 +138,8 @@ function touchtris.exitGL()
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
+-- The passed in view and proj matrices are ignored, drawing everything
+-- in flat, local screen space.
 function touchtris.render_for_one_eye(view, proj)
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
@@ -138,9 +156,10 @@ function touchtris.render_for_one_eye(view, proj)
             x = 2*x - 1
             y = 2*y + 1
             mm.make_translation_matrix(tx, x, y, 0)
-            local s = {}
-            mm.make_scale_matrix(s, .3, .3, .3)
-            mm.post_multiply(tx, s)
+            local sm = {}
+            local s = .25
+            mm.make_scale_matrix(sm, s,s,s)
+            mm.post_multiply(tx, sm)
             gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, tx))
         end
 
@@ -157,6 +176,8 @@ end
 function touchtris.onSingleTouch(pointerid, action, x, y)
     pointers[pointerid] = {x=x/winw, y=y/winh}
 
+    -- Actions 1 and 6 are "up" actions, indicating a pointer
+    -- has been lifted from the touchscreen.
     if action == 1 or action == 6 then
         pointers[pointerid] = nil
     end
