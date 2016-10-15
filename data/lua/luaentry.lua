@@ -18,7 +18,7 @@ local scene_modules = {
     "scene.vsfstri",
     "scene.clockface",
     "scene.textured_cubes",
-    --"scene.stringedit_scene",
+    "scene.stringedit_scene",
     "scene.fonttest_scene",
     "scene.shadertoy_scene2",
     "scene.hybrid_scene",

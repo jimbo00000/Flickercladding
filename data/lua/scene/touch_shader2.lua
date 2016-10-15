@@ -1,17 +1,10 @@
 --[[ touch_shader2.lua
 
-    Draws touch points to with a fragment shader.
+    Draws touch points *indirectly* with a fragment shader.
 
-    A single quad is initialized with attributes to fill the screen.
-    Touch points are passed as uniforms to a fragment shader that draws
-    to every pixel on the screen. The frag shader loopsover all touch
-    points, checking if a given pixel is within a given range of any
-    of them. If so, it lights up with color.
-
-    Similar to the touchtris scene, pointer(touch) events come in through
-    the onSingleTouch function and are stored in a module-local array.
-    Instead of looping through the triangles on CPU(in Lua) as in
-    touchtris, we pass in all touch points as a uniform array to the shader.
+    There is an intermediate render-to-texture step, where touch points
+    are drawn with blending onto an intermediate buffer. Color trails
+    can accumulate over multiple frames, leaving trails.
 ]]
 touch_shader2 = {}
 
@@ -145,7 +138,6 @@ local function init_cube_attributes()
 end
 
 function touch_shader2.initGL()
-    print("touch_shader2.initGL")
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     vao = vaoId[0]
@@ -226,8 +218,6 @@ local function render_to_buffer()
     gl.glGetIntegerv(GL.GL_VIEWPORT, vpdims)
     gl.glViewport(0,0, winw, winh)
 
-    --gl.glClearColor(0.5, 0.5, 1.0, 0.0)
-    --gl.glClear(GL.GL_COLOR_BUFFER_BIT + GL.GL_DEPTH_BUFFER_BIT)
     render_points()
 
     -- Set the viewport back when we're done
@@ -278,9 +268,7 @@ function touch_shader2.setWindowSize(w,h)
     fbf.deallocate_fbo(fbo)
 
     winw, winh = w,h
-    print("Allocating fbo...",w,h)
     fbo = fbf.allocate_fbo(winw, winh)
-    print("alloced?")
 end
 
 return touch_shader2

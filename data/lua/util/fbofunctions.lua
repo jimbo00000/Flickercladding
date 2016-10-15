@@ -14,6 +14,7 @@ function fbofunctions.allocate_fbo(w, h)
     fbo.id = fboId[0]
     gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo.id)
 
+    -- TODO: take use_depth as a parameter
 --[[
     local dtxId = ffi.new("GLuint[1]")
     gl.glGenTextures(1, dtxId)
