@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
+import android.view.KeyEvent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -60,5 +61,11 @@ public class FlickercladdingActivity extends Activity implements SensorEventList
 
     public void onSensorChanged(SensorEvent event) {
         //Log.w("ACTIV", String.format("sensor %f %f %f\n", event.values[0], event.values[1], event.values[2]));
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.w("ACTIV", String.format("key: %d, shift %b", keyCode, event.isShiftPressed()));
+        return super.onKeyUp(keyCode, event);
     }
 }
