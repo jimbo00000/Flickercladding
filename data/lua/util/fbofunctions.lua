@@ -14,6 +14,7 @@ function fbofunctions.allocate_fbo(w, h)
     fbo.id = fboId[0]
     gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo.id)
 
+--[[
     local dtxId = ffi.new("GLuint[1]")
     gl.glGenTextures(1, dtxId)
     fbo.depth = dtxId[0]
@@ -29,15 +30,16 @@ function fbofunctions.allocate_fbo(w, h)
                   GL.GL_DEPTH_COMPONENT, GL.GL_UNSIGNED_BYTE, nil)
     gl.glBindTexture(GL.GL_TEXTURE_2D, 0)
     gl.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, fbo.depth, 0)
-
+]]
     local texId = ffi.new("GLuint[1]")
     gl.glGenTextures(1, texId)
     fbo.tex = texId[0]
     gl.glBindTexture(GL.GL_TEXTURE_2D, fbo.tex)
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
-    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
-    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
+    gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAX_LEVEL, 0)
     gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGBA8,
                   w, h, 0,
                   GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, nil)
@@ -63,9 +65,9 @@ function fbofunctions.deallocate_fbo(fbo)
     texId[0] = fbo.tex
     gl.glDeleteTextures(1, texId)
 
-    local depthId = ffi.new("int[1]")
-    depthId[0] = fbo.depth
-    gl.glDeleteTextures(1, depthId)
+    --local depthId = ffi.new("int[1]")
+    --depthId[0] = fbo.depth
+    --gl.glDeleteTextures(1, depthId)
 end
 
 function fbofunctions.bind_fbo(fbo)

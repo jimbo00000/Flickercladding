@@ -77,7 +77,8 @@ void main()
         c = max(c, smoothstep(.1, 0., d));
     }
     col *= c;
-    fragColor = vec4(col, 1.0);
+
+    fragColor = vec4(col, length(col));
 }
 ]]
 
@@ -144,6 +145,7 @@ local function init_cube_attributes()
 end
 
 function touch_shader2.initGL()
+    print("touch_shader2.initGL")
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     vao = vaoId[0]
@@ -204,10 +206,13 @@ local function render_points()
     gl.glUniform2fv(utp_loc, num, glFloatv(2*num, pts))
     gl.glUniform1i(unp_loc, num)
 
+    gl.glEnable(GL.GL_BLEND)
+    gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
     gl.glUseProgram(0)
+    gl.glDisable(GL.GL_BLEND)
 end
 
 local function render_to_buffer()
@@ -221,8 +226,8 @@ local function render_to_buffer()
     gl.glGetIntegerv(GL.GL_VIEWPORT, vpdims)
     gl.glViewport(0,0, winw, winh)
 
-    gl.glClearColor(0.5, 0.5, 1.0, 0.0)
-    gl.glClear(GL.GL_COLOR_BUFFER_BIT + GL.GL_DEPTH_BUFFER_BIT)
+    --gl.glClearColor(0.5, 0.5, 1.0, 0.0)
+    --gl.glClear(GL.GL_COLOR_BUFFER_BIT + GL.GL_DEPTH_BUFFER_BIT)
     render_points()
 
     -- Set the viewport back when we're done
@@ -268,9 +273,14 @@ function touch_shader2.setBrightness(b)
     bright = b
 end
 
+-- Called on init before initGL and every time the screen rotates
 function touch_shader2.setWindowSize(w,h)
+    fbf.deallocate_fbo(fbo)
+
     winw, winh = w,h
+    print("Allocating fbo...",w,h)
     fbo = fbf.allocate_fbo(winw, winh)
+    print("alloced?")
 end
 
 return touch_shader2
