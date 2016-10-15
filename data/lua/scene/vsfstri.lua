@@ -1,14 +1,25 @@
--- vsfstri.lua
+--[[ vsfstri.lua
+
+    The simplest example of a using a vertex shader(vs)
+    and a fragment shader(fs) to draw a triangle(tri).
+
+    Vertex attributes are created in a function called from initGL.
+    The same array is used for both locations and colors.
+    The shaders used to do the drawing are a simple passthrough,
+    applying the modelview and projection matrices to position vertices
+    and passing the color rgb(xyz) values directly through to output.
+]]
 vsfstri = {}
 
 --local openGL = require("opengl")
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
 
-local glIntv     = ffi.typeof('GLint[?]')
-local glUintv    = ffi.typeof('GLuint[?]')
-local glFloatv   = ffi.typeof('GLfloat[?]')
+local glIntv = ffi.typeof('GLint[?]')
+local glUintv = ffi.typeof('GLuint[?]')
+local glFloatv = ffi.typeof('GLfloat[?]')
 
+-- Module-internal state: hold a list of VBOs for deletion on exitGL
 local vbos = {}
 local vao = 0
 local prog = 0
@@ -50,11 +61,11 @@ void main()
 ]]
 
 
-local function init_cube_attributes()
+local function init_tri_attributes()
     local verts = glFloatv(3*3, {
         0,0,0,
         1,0,0,
-        1,1,0,
+        0,1,0,
         })
 
     local vvbo = glIntv(0)
@@ -95,7 +106,7 @@ function vsfstri.initGL()
         fsrc = basic_frag,
         })
 
-    init_cube_attributes()
+    init_tri_attributes()
     gl.glBindVertexArray(0)
 end
 

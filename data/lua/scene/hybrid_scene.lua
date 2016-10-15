@@ -2,7 +2,7 @@
 hybrid_scene = {}
 
 local sts = require("scene.shadertoy_scene2")
-local cbs = require("scene.cubescene2")
+local cbs = require("scene.textured_cubes")
 local glfont = nil
 require("util.glfont")
 local mm = require("util.matrixmath")

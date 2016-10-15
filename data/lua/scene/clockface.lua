@@ -1,4 +1,18 @@
--- clockface.lua
+--[[ clockface.lua
+
+    A simple example of animation.
+
+    The time is set in the timestep function and stored in a
+    module-scoped variable. This variable is referenced during
+    drawing to rotate the three hands of a stopwatch.
+
+    The largest hand ticks once per second and completes a rotation
+    after one minute. The middle hand completes one smooth rotation
+    per second. The smallest hand rotates 10 times per second.
+
+    This scene can be useful to check that the internal time functions
+    are returning values concistent with wall clock time. 
+]]
 clockface = {}
 
 local openGL = require("opengl")
@@ -6,14 +20,15 @@ local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
 
-local glIntv     = ffi.typeof('GLint[?]')
-local glUintv    = ffi.typeof('GLuint[?]')
-local glFloatv   = ffi.typeof('GLfloat[?]')
+local glIntv   = ffi.typeof('GLint[?]')
+local glUintv  = ffi.typeof('GLuint[?]')
+local glFloatv = ffi.typeof('GLfloat[?]')
 
+-- Module state
 local vbos = {}
 local vao = 0
 local prog = 0
-local absoluteTime = 0
+local absoluteTime = 0 -- Hold time here for drawing
 
 local basic_vert = [[
 #version 310 es
@@ -51,7 +66,7 @@ void main()
 ]]
 
 
-local function init_cube_attributes()
+local function init_tri_attributes()
     local verts = glFloatv(3*8, {
         -.1,0,0,
         .1,0,0,
@@ -99,7 +114,7 @@ function clockface.initGL()
         fsrc = basic_frag,
         })
 
-    init_cube_attributes()
+    init_tri_attributes()
     gl.glBindVertexArray(0)
 end
 
@@ -137,7 +152,7 @@ function clockface.render_for_one_eye(view, proj)
     mm.make_identity_matrix(m01)
     mm.glh_translate(m01, 0,0,-.02)
     local rotations01 = .1*absoluteTime
-    rotations01 = math.floor(rotations01*10)/10
+    rotations01 = math.floor(rotations01*10)/60
     mm.glh_rotate(m01, 360*rotations01, 0,0,-1)
     mm.glh_scale(m01, 2,2,2)
     mm.pre_multiply(m01, view)

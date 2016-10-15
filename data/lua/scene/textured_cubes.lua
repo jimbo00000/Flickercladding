@@ -1,16 +1,27 @@
--- cubescene2.lua
-scene = {}
+--[[ textured_cubes.lua
+
+    A simple texturing example.
+
+    Loads a texture image from raw data to eliminate the image format
+    parsing process. The data can be saved out from Gimp or ImageMagick.
+    We have to know the pixel dimensions and color depth ahead of time
+    to get the right image.
+
+    We also have to know the directory where the image file resides.
+    The standard entry point setDataDirectory takes a directory string
+    to be used as the path when opening the raw image file.
+]]
+textured_cubes = {}
 
 local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
 
-local glIntv     = ffi.typeof('GLint[?]')
-local glUintv    = ffi.typeof('GLuint[?]')
-local glFloatv   = ffi.typeof('GLfloat[?]')
+local glIntv   = ffi.typeof('GLint[?]')
+local glUintv  = ffi.typeof('GLuint[?]')
+local glFloatv = ffi.typeof('GLfloat[?]')
 
-local bounce = 0
 local vbos = {}
 local vao = 0
 local prog = 0
@@ -60,7 +71,7 @@ void main()
 }
 ]]
 
-function scene.setDataDirectory(dir)
+function textured_cubes.setDataDirectory(dir)
     dataDir = dir
 end
 
@@ -82,7 +93,6 @@ local function loadtextures()
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_CLAMP_TO_EDGE)
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
-    --gl.glTexParameteri( GL.GL_TEXTURE_2D, GL.GL_DEPTH_TEXTURE_MODE, GL.GL_INTENSITY ); --deprecated, out in 3.1
     gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAX_LEVEL, 0)
     gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_RGB,
                   w, h, 0,
@@ -91,7 +101,7 @@ local function loadtextures()
 end
 
 local function init_cube_attributes()
-    local v = {
+    local v = { -- Vertex positions, 6 faces of a cube
         0,0,0,
         1,0,0,
         1,1,0,
@@ -124,7 +134,7 @@ local function init_cube_attributes()
     }
     local verts = glFloatv(#v,v)
 
-    local c = {
+    local c = { -- Texture coordinates, all 6 faces are identical
         0,0, 1,0, 1,1, 0,1,
         0,0, 1,0, 1,1, 0,1,
         0,0, 1,0, 1,1, 0,1,
@@ -154,7 +164,7 @@ local function init_cube_attributes()
     gl.glEnableVertexAttribArray(vpos_loc)
     gl.glEnableVertexAttribArray(vcol_loc)
 
-    local q = {
+    local q = { -- Vertex indices for drawing triangles of faces
         0,3,2, 1,0,2,
         4,5,6, 7,4,6,
         8,11,10, 9,8,10,
@@ -170,7 +180,7 @@ local function init_cube_attributes()
     table.insert(vbos, qvbo)
 end
 
-function scene.initGL()
+function textured_cubes.initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     vao = vaoId[0]
@@ -186,15 +196,18 @@ function scene.initGL()
     gl.glBindVertexArray(0)
 end
 
-function scene.exitGL()
+function textured_cubes.exitGL()
     gl.glBindVertexArray(vao)
     for _,v in pairs(vbos) do
         gl.glDeleteBuffers(1,v)
     end
     vbos = {}
+
     gl.glDeleteProgram(prog)
     local vaoId = ffi.new("GLuint[1]", vao)
     gl.glDeleteVertexArrays(1, vaoId)
+    local texdel = ffi.new("GLuint[1]", texID)
+    gl.glDeleteTextures(1,texdel)
 end
 
 local function draw_color_cube()
@@ -203,7 +216,7 @@ local function draw_color_cube()
     gl.glBindVertexArray(0)
 end
 
-function scene.render_for_one_eye(view, proj)
+function textured_cubes.render_for_one_eye(view, proj)
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
     gl.glUseProgram(prog)
@@ -214,7 +227,7 @@ function scene.render_for_one_eye(view, proj)
     local stex_loc = gl.glGetUniformLocation(prog, "sTex")
     gl.glUniform1i(stex_loc, 0)
     
-    -- grid of cubes
+    -- A grid of cubes arranged on the xz plane
     local s = 2
     for j=-s,s do
         for i=-s,s do
@@ -223,7 +236,6 @@ function scene.render_for_one_eye(view, proj)
             mm.glh_translate(m, .1, 0., .2)
             mm.glh_translate(m, i, -.6, -j)
             mm.glh_scale(m, .5, .5, .5)
-
             mm.pre_multiply(m, view)
 
             gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, m))
@@ -234,8 +246,7 @@ function scene.render_for_one_eye(view, proj)
     gl.glUseProgram(0)
 end
 
-function scene.timestep(absTime, dt)
-    bounce = bounce + dt * 2 * (180/math.pi)
+function textured_cubes.timestep(absTime, dt)
 end
 
-return scene
+return textured_cubes
