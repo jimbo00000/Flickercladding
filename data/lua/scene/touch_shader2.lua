@@ -207,6 +207,24 @@ local function render_points()
     gl.glDisable(GL.GL_BLEND)
 end
 
+local function clear_buffer()
+    -- Set the bound FBO back when done
+    local boundfbo = ffi.new("int[1]")
+    gl.glGetIntegerv(GL.GL_FRAMEBUFFER_BINDING, boundfbo)
+    fbf.bind_fbo(fbo)
+    -- Set the viewport back when we're done
+    local vpdims = ffi.new("int[4]")
+    gl.glGetIntegerv(GL.GL_VIEWPORT, vpdims)
+    gl.glViewport(0,0, winw, winh)
+
+    gl.glClearColor(0,0,0,0)
+    gl.glClear(GL.GL_COLOR_BUFFER_BIT + GL.GL_DEPTH_BUFFER_BIT)
+
+    -- Set the viewport back when we're done
+    gl.glViewport(vpdims[0], vpdims[1], vpdims[2], vpdims[3])
+    -- Set the FBO back when done
+    gl.glBindFramebuffer(GL.GL_FRAMEBUFFER, boundfbo[0])
+end
 local function render_to_buffer()
     -- Set the bound FBO back when done
     local boundfbo = ffi.new("int[1]")
@@ -269,6 +287,7 @@ function touch_shader2.setWindowSize(w,h)
 
     winw, winh = w,h
     fbo = fbf.allocate_fbo(winw, winh)
+    clear_buffer()
 end
 
 return touch_shader2
