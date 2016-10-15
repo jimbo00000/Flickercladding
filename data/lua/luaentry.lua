@@ -14,6 +14,7 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
+    "scene.touch_shader2",
     "scene.vsfstri",
     "scene.clockface",
     "scene.textured_cubes",
