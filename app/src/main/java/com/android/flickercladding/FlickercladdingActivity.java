@@ -20,27 +20,45 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
 import java.io.File;
 
 
-public class FlickercladdingActivity extends Activity {
+public class FlickercladdingActivity extends Activity implements SensorEventListener {
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
 
     FlickercladdingView mView;
 
     @Override protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         mView = new FlickercladdingView(getApplication(), false, 16, 0);
-	setContentView(mView);
+        setContentView(mView);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     }
 
     @Override protected void onPause() {
         super.onPause();
         mView.onPause();
+        mSensorManager.unregisterListener(this);
     }
 
-    @Override protected void onResume() {
+    @Override
+    protected void onResume() {
         super.onResume();
         mView.onResume();
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    public void onSensorChanged(SensorEvent event) {
+        //Log.w("ACTIV", String.format("sensor %f %f %f\n", event.values[0], event.values[1], event.values[2]));
     }
 }
