@@ -228,7 +228,8 @@ void TabletWindow::_DisplayScene(int winw, int winh)
 void TabletWindow::display(int winw, int winh)
 {
     glViewport(0, 0, winw, winh);
-    glClearColor(0.f, 0.f, 0.f, 0.f);
+    const float g = .1f;
+    glClearColor(g, g, g, 0.f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
