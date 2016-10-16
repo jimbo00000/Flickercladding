@@ -34,6 +34,7 @@ function load_and_compile_shader_source(src, type)
         local logp = glCharv(ill[0] + 1)
         gl.glGetShaderInfoLog(s, ill[0], cw, logp)
         print("__ShaderInfoLog: "..ffi.string(logp))
+        assert(false, ffi.string(logp))
         return 0
     end
 
@@ -90,8 +91,7 @@ function shaderfunctions.make_shader_from_source(sources)
         print("__ProgramInfoLog: "..ffi.string(logp))
         local tb = debug.traceback()
         print(tb)
-        os.exit()
-        return 0
+        assert(false, ffi.string(logp))
     end
 
     gl.glUseProgram(0)
