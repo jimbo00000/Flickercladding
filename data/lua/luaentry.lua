@@ -239,13 +239,15 @@ function on_lua_keypressed(key, scancode, action, mods)
         connect_to_debugger()
     end
 
-    if Scene.keypressed then
-        local consumed = Scene.keypressed(key, scancode, action, mods)
-        if consumed then return end
-    end
+    if action == 1 then
+        if Scene.keypressed then
+            local consumed = Scene.keypressed(key, scancode, action, mods)
+            if consumed then return end
+        end
 
-    if Scene.charkeypressed then
-        Scene.charkeypressed(string.char(scancode))
+        if Scene.charkeypressed then
+            Scene.charkeypressed(string.char(scancode))
+        end
     end
 end
 
