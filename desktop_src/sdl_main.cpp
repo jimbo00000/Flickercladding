@@ -175,7 +175,8 @@ int main(int argc, char *argv[])
                     portrait = !portrait;
                     setAppScreenSize();
                 }
-                onKeyEvent(event.key.keysym.sym, 0, event.key.state, event.key.keysym.mod);
+                //@todo get scancode correctly
+                onKeyEvent(event.key.keysym.sym, event.key.keysym.sym, event.key.state, event.key.keysym.mod);
             }
             break;
 

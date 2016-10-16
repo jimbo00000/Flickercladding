@@ -390,9 +390,9 @@ void TabletWindow::OnWheelEvent(double dx, double dy)
     m_chassisPos.z += .4f * dy;
 }
 
-void TabletWindow::onKeyEvent(int key, int codes, int action, int mods)
+void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
 {
-    m_luaScene.keypressed(key);
+    m_luaScene.keypressed(key, scancode, action, mods);
 
     switch (key)
     {

@@ -126,7 +126,7 @@ void LuajitScene::exitGL()
     }
 }
 
-void LuajitScene::keypressed(int key)
+void LuajitScene::keypressed(int key, int scancode, int action, int mods)
 {
     if (m_errorOccurred == true)
         return;
@@ -139,9 +139,15 @@ void LuajitScene::keypressed(int key)
 
     lua_State *L = m_Lua;
     lua_getglobal(L, "on_lua_keypressed");
-    lua_Number LabsTime = key;
-    lua_pushnumber(L, LabsTime);
-    if (lua_pcall(L, 1, 0, 0) != 0)
+    lua_Number Lkey = key;
+    lua_Number Lscancode = scancode;
+    lua_Number Laction = action;
+    lua_Number Lmods = mods;
+    lua_pushnumber(L, Lkey);
+    lua_pushnumber(L, Lscancode);
+    lua_pushnumber(L, Laction);
+    lua_pushnumber(L, Lmods);
+    if (lua_pcall(L, 4, 0, 0) != 0)
     {
         const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;

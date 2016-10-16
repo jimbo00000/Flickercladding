@@ -29,4 +29,5 @@ public class FlickercladdingLib {
     public static native void step();
 
     public static native void onSingleTouchEvent(int pointerid, int action, float x, float y);
+    public static native void onKeyEvent(int key, int scancode, int action, int mods);
 }

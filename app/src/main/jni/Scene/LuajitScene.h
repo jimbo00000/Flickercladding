@@ -31,7 +31,7 @@ public:
     virtual void exitLua();
     virtual void initGL();
     virtual void exitGL();
-    virtual void keypressed(int key);
+    virtual void keypressed(int key, int scancode, int action, int mods);
     virtual void timestep(double absTime, double dt);
     virtual void RenderForOneEye(const float* pMview, const float* pPersp) const;
     virtual void onSingleTouch(int pointerid, int action, int x, int y);

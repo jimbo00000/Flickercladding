@@ -233,9 +233,19 @@ function connect_to_debugger()
     require('mobdebug').start()
 end
 
-function on_lua_keypressed(key)
+function on_lua_keypressed(key, scancode, action, mods)
+    -- TODO an escape sequence here?
     if key == 298 then -- F9
         connect_to_debugger()
+    end
+
+    if Scene.keypressed then
+        local consumed = Scene.keypressed(key, scancode, action, mods)
+        if consumed then return end
+    end
+
+    if Scene.charkeypressed then
+        Scene.charkeypressed(string.char(scancode))
     end
 end
 
