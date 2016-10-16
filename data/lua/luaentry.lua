@@ -200,7 +200,8 @@ function on_lua_singletouch(pointerid, action, x, y)
         pointers[pointerid] = nil
     end
 
-    -- Check for 4 touches active at once to switch scene
+    -- Check for >4 touches active at once to switch scene,
+    -- only because it is a very simple conditional.
     local i = 0
     for k,v in pairs(pointers) do
         i = i+1
@@ -214,26 +215,25 @@ function on_lua_singletouch(pointerid, action, x, y)
 end
 
 function connect_to_debugger()
-        --[[
-        Connect to a running debugger server in ZeroBrane Studio.
-          - Choose Project->Start Debugger Server
-          - Include mobdebug.lua in lua/ next to scenebridge.lua
-          - Include socket/core.dll in the working directory of the app
-             TODO: set package.path to get this from within the source tree
-          TODO: Can only trigger bp once per reload of lua state.
-          One copy of socket/core.dll looks for lua.lib by name - the quick
-          fix is to copy lua51.dll to lua.dll. Hex editing the dll is also an option.
-        ]]
-        if (ffi.os == "Windows") then
-            --TODO: how do I link to socket package on Linux?
-            package.loadlib("socket/core.dll", "luaopen_socket_core")
-            local socket = require("socket.core")
-        end
-        require('mobdebug').start()
+    --[[
+    Connect to a running debugger server in ZeroBrane Studio.
+      - Choose Project->Start Debugger Server
+      - Include mobdebug.lua in lua/ next to scenebridge.lua
+      - Include socket/core.dll in the working directory of the app
+         TODO: set package.path to get this from within the source tree
+      TODO: Can only trigger bp once per reload of lua state.
+      One copy of socket/core.dll looks for lua.lib by name - the quick
+      fix is to copy lua51.dll to lua.dll. Hex editing the dll is also an option.
+    ]]
+    if (ffi.os == "Windows") then
+        --TODO: how do I link to socket package on Linux?
+        package.loadlib("socket/core.dll", "luaopen_socket_core")
+        local socket = require("socket.core")
+    end
+    require('mobdebug').start()
 end
 
 function on_lua_keypressed(key)
-    --print("Heard key "..key)
     if key == 298 then -- F9
         connect_to_debugger()
     end
