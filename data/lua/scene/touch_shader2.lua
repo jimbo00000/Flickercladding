@@ -61,17 +61,18 @@ uniform int numPts;
 void main()
 {
     vec3 col = .5*vfColor + vec3(.5);
+
     float c = 0.;
     for (int i=0; i<numPts; ++i)
     {
         vec2 tp = uTouchPts[i];
         tp.y = 1. - tp.y;
         float d = length(col.xy - tp);
-        c = max(c, smoothstep(.1, 0., d));
+        float soft = 1.-smoothstep(0., .15, d);
+        c = max(c, pow(soft,15.));
     }
-    col *= c;
 
-    fragColor = vec4(col, length(col));
+    fragColor = vec4(col, c);
 }
 ]]
 
