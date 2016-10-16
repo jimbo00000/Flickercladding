@@ -81,9 +81,9 @@ void LuajitScene::initGL()
     if (luaL_dofile(L, scriptName.c_str()))
     {
         const std::string out(lua_tostring(L, -1));
-        LOG_INFO("Error in scenebridge: %s", out.c_str());
         m_errorOccurred = true;
         m_errorText += out;
+        LOG_INFO("Error in scenebridge: %s", out.c_str());
     }
 
     lua_getglobal(L, "on_lua_initgl");
@@ -92,8 +92,10 @@ void LuajitScene::initGL()
     lua_pushnumber(L, LpLoaderFunc);
     if (lua_pcall(L, 1, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_initgl': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_initgl: %s", out.c_str());
     }
 
 #ifdef _LINUX
@@ -117,8 +119,10 @@ void LuajitScene::exitGL()
     lua_getglobal(L, "on_lua_exitgl");
     if (lua_pcall(L, 0, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_exitgl': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_exitgl': %s", lua_tostring(L, -1));
     }
 }
 
@@ -139,8 +143,10 @@ void LuajitScene::keypressed(int key)
     lua_pushnumber(L, LabsTime);
     if (lua_pcall(L, 1, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_keypressed': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_keypressed': %s", lua_tostring(L, -1));
     }
 }
 
@@ -163,8 +169,10 @@ void LuajitScene::timestep(double absTime, double dt)
     lua_pushnumber(L, Ldt);
     if (lua_pcall(L, 2, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_timestep': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_timestep': %s", lua_tostring(L, -1));
     }
 
     if (m_queuedEvents.empty() == false)
@@ -179,8 +187,10 @@ void LuajitScene::timestep(double absTime, double dt)
             lua_pushinteger(L, e.y);
             if (lua_pcall(L, 4, 0, 0) != 0)
             {
-                LOG_INFO("Error running function `on_lua_singletouch': %s", lua_tostring(L, -1));
+                const std::string out(lua_tostring(L, -1));
                 m_errorOccurred = true;
+                m_errorText += out;
+                LOG_INFO("Error running function `on_lua_singletouch': %s", lua_tostring(L, -1));
             }
 
             m_queuedEvents.pop();
@@ -193,8 +203,10 @@ void LuajitScene::timestep(double absTime, double dt)
         lua_pushinteger(L, 0);
         if (lua_pcall(L, 1, 0, 0) != 0)
         {
-            LOG_INFO("Error running function `on_lua_changescene': %s", lua_tostring(L, -1));
+            const std::string out(lua_tostring(L, -1));
             m_errorOccurred = true;
+            m_errorText += out;
+            LOG_INFO("Error running function `on_lua_changescene': %s", lua_tostring(L, -1));
         }
 
         m_changeSceneOnNextTimestep = false;
@@ -425,8 +437,10 @@ void LuajitScene::RenderForOneEye(const float* pMview, const float* pPersp) cons
     lua_pushlightuserdata(L, (void*)(pPersp));
     if (lua_pcall(L, 2, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_draw': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_draw': %s", lua_tostring(L, -1));
     }
 }
 
@@ -491,8 +505,10 @@ void LuajitScene::setWindowSize(int w, int h)
     lua_pushinteger(L, h);
     if (lua_pcall(L, 2, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_setwindowsize': %s", lua_tostring(L, -1));
+        const std::string out(lua_tostring(L, -1));
         m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_setwindowsize': %s", lua_tostring(L, -1));
     }
 }
 

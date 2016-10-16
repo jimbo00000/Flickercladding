@@ -56,7 +56,7 @@ public:
 protected:
     lua_State* m_Lua;
     mutable bool m_errorOccurred;
-    std::string m_errorText;
+    mutable std::string m_errorText;
     bool m_changeSceneOnNextTimestep;
 
     std::queue<queuedTouchEvent> m_queuedEvents;
