@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
                     setAppScreenSize();
                 }
                 //@todo get scancode correctly
-                onKeyEvent(event.key.keysym.sym, event.key.keysym.sym, event.key.state, event.key.keysym.mod);
+                onKeyEvent(event.key.keysym.sym, event.text.text[8], event.key.state, event.key.keysym.mod);
             }
             break;
 
