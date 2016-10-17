@@ -61,6 +61,7 @@ public class FlickercladdingActivity extends Activity implements SensorEventList
 
     public void onSensorChanged(SensorEvent event) {
         //Log.w("ACTIV", String.format("sensor %f %f %f\n", event.values[0], event.values[1], event.values[2]));
+        FlickercladdingLib.onAccelerometerChange(event.values[0], event.values[1], event.values[2], event.accuracy);
     }
 
     @Override

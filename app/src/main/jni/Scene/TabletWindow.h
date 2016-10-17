@@ -25,6 +25,7 @@ public:
     void OnSingleTouch(int pointerid, int action, int x, int y);
     void OnWheelEvent(double dx, double dy);
     void OnKeyEvent(int key, int scancode, int action, int mods);
+    void onAccelerometerChange(float x, float y, float z, int accuracy);
 
 protected:
     void _DrawText(int winw, int winh);

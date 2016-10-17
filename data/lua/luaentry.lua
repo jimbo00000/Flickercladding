@@ -14,6 +14,8 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
+    "scene.colorcube",
+    "scene.fullscreen_quad",
     "scene.touch_shader2",
     "scene.vsfstri",
     "scene.clockface",
@@ -249,6 +251,11 @@ function on_lua_keypressed(key, scancode, action, mods)
             Scene.charkeypressed(string.char(scancode))
         end
     end
+end
+
+function on_lua_accelerometer(x,y,z,accuracy)
+    --print("ACCEL")
+    --print(x,y,z,accuracy)
 end
 
 function on_lua_setwindowsize(w, h)

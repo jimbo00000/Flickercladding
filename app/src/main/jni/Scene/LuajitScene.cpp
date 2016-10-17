@@ -156,6 +156,39 @@ void LuajitScene::keypressed(int key, int scancode, int action, int mods)
     }
 }
 
+void LuajitScene::onAccelerometerChange(float x, float y, float z, int accuracy)
+{
+    if (m_errorOccurred == true)
+        return;
+
+    if (m_bDraw == false)
+        return;
+
+    if (m_Lua == NULL)
+        return;
+
+    ///@todo Queue up these events to run on the graphics thread
+#if 0
+    lua_State *L = m_Lua;
+    lua_getglobal(L, "on_lua_accelerometer");
+    lua_Number Lx = x;
+    lua_Number Ly = y;
+    lua_Number Lz = z;
+    lua_Number Laccuracy = accuracy;
+    lua_pushnumber(L, Lx);
+    lua_pushnumber(L, Ly);
+    lua_pushnumber(L, Lz);
+    lua_pushnumber(L, Laccuracy);
+    if (lua_pcall(L, 4, 0, 0) != 0)
+    {
+        const std::string out(lua_tostring(L, -1));
+        m_errorOccurred = true;
+        m_errorText += out;
+        LOG_INFO("Error running function `on_lua_accelerometer': %s", lua_tostring(L, -1));
+    }
+#endif
+}
+
 void LuajitScene::timestep(double absTime, double dt)
 {
     if (m_errorOccurred == true)

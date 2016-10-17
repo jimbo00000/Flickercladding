@@ -60,6 +60,11 @@ void onKeyEvent(int key, int scancode, int action, int mods)
     g_window.OnKeyEvent(key, scancode, action, mods);
 }
 
+void onAccelerometerChange(float x, float y, float z, int accuracy)
+{
+    g_window.onAccelerometerChange(x, y, z, accuracy);
+}
+
 void setLoaderFunc(void* pFunc)
 {
     g_window.m_pLoaderFunc = pFunc;

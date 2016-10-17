@@ -415,3 +415,8 @@ void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
         break;
     }
 }
+
+void TabletWindow::onAccelerometerChange(float x, float y, float z, int accuracy)
+{
+    m_luaScene.onAccelerometerChange(x, y, z, accuracy);
+}
