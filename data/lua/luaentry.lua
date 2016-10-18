@@ -258,6 +258,9 @@ function on_lua_accelerometer(x,y,z,accuracy)
     --print(x,y,z,accuracy)
 end
 
+function on_lua_setTimeScale(t)
+end
+
 function on_lua_setwindowsize(w, h)
     win_w,win_h = w,h
     if Scene.setWindowSize then Scene.setWindowSize(w, h) end

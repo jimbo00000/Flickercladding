@@ -104,7 +104,7 @@ void LuajitScene::initGL()
     lua_pushnumber(L, LtimeScale);
     if (lua_pcall(L, 1, 0, 0) != 0)
     {
-        LOG_INFO("Error running function `on_lua_keypressed': %s", lua_tostring(L, -1));
+        LOG_INFO("Error running function `on_lua_setTimeScale': %s", lua_tostring(L, -1));
         m_errorOccurred = true;
     }
 #endif
