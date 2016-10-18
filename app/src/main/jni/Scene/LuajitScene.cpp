@@ -15,7 +15,8 @@ LuajitScene::LuajitScene()
 , m_errorOccurred(false)
 , m_errorText()
 , m_changeSceneOnNextTimestep(false)
-, m_queuedEvents()
+, m_queuedTouchEvents()
+, m_queuedAccelerometerEvents()
 {
 }
 
@@ -167,8 +168,10 @@ void LuajitScene::onAccelerometerChange(float x, float y, float z, int accuracy)
     if (m_Lua == NULL)
         return;
 
-    ///@todo Queue up these events to run on the graphics thread
-#if 0
+#if 1
+    queuedAccelerometerEvent e = {x, y, z, accuracy};
+    m_queuedAccelerometerEvents.push(e);
+#else
     lua_State *L = m_Lua;
     lua_getglobal(L, "on_lua_accelerometer");
     lua_Number Lx = x;
@@ -214,11 +217,11 @@ void LuajitScene::timestep(double absTime, double dt)
         LOG_INFO("Error running function `on_lua_timestep': %s", lua_tostring(L, -1));
     }
 
-    if (m_queuedEvents.empty() == false)
+    if (m_queuedTouchEvents.empty() == false)
     {
-        while (m_queuedEvents.empty() == false)
+        while (m_queuedTouchEvents.empty() == false)
         {
-            const queuedTouchEvent e = m_queuedEvents.front();
+            const queuedTouchEvent e = m_queuedTouchEvents.front();
             lua_getglobal(L, "on_lua_singletouch");
             lua_pushinteger(L, e.pointerid);
             lua_pushinteger(L, e.action);
@@ -232,7 +235,29 @@ void LuajitScene::timestep(double absTime, double dt)
                 LOG_INFO("Error running function `on_lua_singletouch': %s", lua_tostring(L, -1));
             }
 
-            m_queuedEvents.pop();
+            m_queuedTouchEvents.pop();
+        }
+    }
+
+    if (m_queuedAccelerometerEvents.empty() == false)
+    {
+        while (m_queuedAccelerometerEvents.empty() == false)
+        {
+            const queuedAccelerometerEvent e = m_queuedAccelerometerEvents.front();
+            lua_getglobal(L, "on_lua_accelerometer");
+            lua_pushnumber(L, e.x);
+            lua_pushnumber(L, e.y);
+            lua_pushnumber(L, e.z);
+            lua_pushnumber(L, e.accuracy);
+            if (lua_pcall(L, 4, 0, 0) != 0)
+            {
+                const std::string out(lua_tostring(L, -1));
+                m_errorOccurred = true;
+                m_errorText += out;
+                LOG_INFO("Error running function `on_lua_accelerometer': %s", lua_tostring(L, -1));
+            }
+
+            m_queuedAccelerometerEvents.pop();
         }
     }
 
@@ -499,7 +524,7 @@ void LuajitScene::onSingleTouch(int pointerid, int action, int x, int y)
 
 #if 1
     queuedTouchEvent e = {pointerid, action, x, y};
-    m_queuedEvents.push(e);
+    m_queuedTouchEvents.push(e);
 #else
     lua_getglobal(L, "on_lua_singletouch");
     lua_pushinteger (L, pointerid);

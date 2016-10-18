@@ -22,6 +22,13 @@ struct queuedTouchEvent {
     int y;
 };
 
+struct queuedAccelerometerEvent {
+    float x;
+    float y;
+    float z;
+    int accuracy;
+};
+
 class LuajitScene : public IScene
 {
 public:
@@ -60,7 +67,8 @@ protected:
     mutable std::string m_errorText;
     bool m_changeSceneOnNextTimestep;
 
-    std::queue<queuedTouchEvent> m_queuedEvents;
+    std::queue<queuedTouchEvent> m_queuedTouchEvents;
+    std::queue<queuedAccelerometerEvent> m_queuedAccelerometerEvents;
 
 private: // Disallow copy ctor and assignment operator
     LuajitScene(const LuajitScene&);
