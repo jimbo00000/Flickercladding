@@ -254,7 +254,7 @@ function on_lua_keypressed(key, scancode, action, mods)
 end
 
 function on_lua_accelerometer(x,y,z,accuracy)
-    print("ACCEL",x,y,z,accuracy)
+    if Scene.accelerometer then Scene.accelerometer(x,y,z,accuracy) end
 end
 
 function on_lua_setwindowsize(w, h)
