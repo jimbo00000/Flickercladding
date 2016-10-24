@@ -8,6 +8,7 @@ local openGL -- @todo select GL or GLES header
 local Scene = nil
 require("util.glfont")
 local mm = require("util.matrixmath")
+local kc = require("util.glfw_keycodes")
 
 local ANDROID = false
 local win_w,win_h = 800,800
@@ -15,6 +16,7 @@ local lastSceneChangeTime = 0
 
 local scene_modules = {
     "scene.colorcube",
+    "scene.stringedit_scene",
     "scene.fullscreen_quad",
     "scene.touch_shader2",
     "scene.vsfstri",
@@ -236,6 +238,11 @@ function connect_to_debugger()
 end
 
 function on_lua_keypressed(key, scancode, action, mods)
+    print("KEY: "..key.." "..scancode.." "..action.." "..mods)
+
+    local lookup = kc.glfw_keycodes_map[key]
+    print("Lookup: ", lookup)
+
     -- TODO an escape sequence here?
     if key == 298 then -- F9
         connect_to_debugger()

@@ -468,9 +468,11 @@ function stringedit_scene.keypressed(key, scancode, action, mods)
     return false
 end
 
+--[[
 function stringedit_scene.charkeypressed(ch)
     editbuf:addchar(ch)
     return true
 end
+]]
 
 return stringedit_scene
