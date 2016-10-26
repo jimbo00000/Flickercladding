@@ -15,11 +15,31 @@ def extractKeysFromGlfw():
 				#print(arr)
 				lua = '    [{0}] = "{1}",'.format(arr[2], arr[1].replace("GLFW_KEY", "KEY"))
 				print(lua)
+
+
+def extractKeysFromSDL():
+	"""Print key value/id pairs for the Glfw library to stdout."""
+	header = "SDL_keycode.h"
+	sdlpath = os.path.join("C:/lib", "SDL2-2.0.3", "include", header)
+	with open(sdlpath) as infile:
+		for line in infile:
+			if "SDLK_" in line:
+				arr = line.split()
+				if arr[1] == '=':
+					ch = arr[2][1:-2]
+					if len(ch) == 1:
+						#print(arr[0], ch, str(ch), ord(str(ch)))
+						lua = '    [{0}] = "{1}",'.format(ord(str(ch)), arr[0].replace("SDLK", "KEY").upper())
+						print(lua)
+
+
+
 #
 # Main: enter here
 #
 def main(argv=None):
-	extractKeysFromGlfw()
+	#extractKeysFromGlfw()
+	extractKeysFromSDL()
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv[1:]))
