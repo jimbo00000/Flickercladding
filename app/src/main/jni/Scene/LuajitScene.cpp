@@ -17,6 +17,7 @@ LuajitScene::LuajitScene()
 , m_changeSceneOnNextTimestep(false)
 , m_queuedTouchEvents()
 , m_queuedAccelerometerEvents()
+, m_queuedKeyEvents()
 {
 }
 
@@ -138,6 +139,10 @@ void LuajitScene::keypressed(int key, int scancode, int action, int mods)
     if (m_Lua == NULL)
         return;
 
+#if 1
+    queuedKeyEvent e = {key, scancode, action, mods};
+    m_queuedKeyEvents.push(e);
+#else
     lua_State *L = m_Lua;
     lua_getglobal(L, "on_lua_keypressed");
     lua_Number Lkey = key;
@@ -155,6 +160,7 @@ void LuajitScene::keypressed(int key, int scancode, int action, int mods)
         m_errorText += out;
         LOG_INFO("Error running function `on_lua_keypressed': %s", lua_tostring(L, -1));
     }
+#endif
 }
 
 void LuajitScene::onAccelerometerChange(float x, float y, float z, int accuracy)
@@ -239,18 +245,15 @@ void LuajitScene::timestep(double absTime, double dt)
         }
     }
 
-    if (m_queuedAccelerometerEvents.empty() == false)
-    {
-        while (m_queuedAccelerometerEvents.empty() == false)
-        {
+    if (m_queuedAccelerometerEvents.empty() == false) {
+        while (m_queuedAccelerometerEvents.empty() == false) {
             const queuedAccelerometerEvent e = m_queuedAccelerometerEvents.front();
             lua_getglobal(L, "on_lua_accelerometer");
             lua_pushnumber(L, e.x);
             lua_pushnumber(L, e.y);
             lua_pushnumber(L, e.z);
             lua_pushnumber(L, e.accuracy);
-            if (lua_pcall(L, 4, 0, 0) != 0)
-            {
+            if (lua_pcall(L, 4, 0, 0) != 0) {
                 const std::string out(lua_tostring(L, -1));
                 m_errorOccurred = true;
                 m_errorText += out;
@@ -259,6 +262,25 @@ void LuajitScene::timestep(double absTime, double dt)
 
             m_queuedAccelerometerEvents.pop();
         }
+    }
+
+    while (m_queuedKeyEvents.empty() == false)
+    {
+        const queuedKeyEvent e = m_queuedKeyEvents.front();
+        lua_getglobal(L, "on_lua_keypressed");
+        lua_pushnumber(L, e.key);
+        lua_pushnumber(L, e.scancode);
+        lua_pushnumber(L, e.action);
+        lua_pushnumber(L, e.mods);
+        if (lua_pcall(L, 4, 0, 0) != 0)
+        {
+            const std::string out(lua_tostring(L, -1));
+            m_errorOccurred = true;
+            m_errorText += out;
+            LOG_INFO("Error running function `on_lua_keypressed': %s", lua_tostring(L, -1));
+        }
+
+        m_queuedKeyEvents.pop();
     }
 
     if (m_changeSceneOnNextTimestep)

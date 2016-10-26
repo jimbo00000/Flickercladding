@@ -29,6 +29,13 @@ struct queuedAccelerometerEvent {
     int accuracy;
 };
 
+struct queuedKeyEvent {
+    int key;
+    int scancode;
+    int action;
+    int mods;
+};
+
 class LuajitScene : public IScene
 {
 public:
@@ -69,6 +76,7 @@ protected:
 
     std::queue<queuedTouchEvent> m_queuedTouchEvents;
     std::queue<queuedAccelerometerEvent> m_queuedAccelerometerEvents;
+    std::queue<queuedKeyEvent> m_queuedKeyEvents;
 
 private: // Disallow copy ctor and assignment operator
     LuajitScene(const LuajitScene&);
