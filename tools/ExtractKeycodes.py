@@ -18,7 +18,7 @@ def extractKeysFromGlfw():
 
 
 def extractKeysFromSDL():
-	"""Print key value/id pairs for the Glfw library to stdout."""
+	"""Print key value/id pairs for the SDL library to stdout."""
 	header = "SDL_keycode.h"
 	sdlpath = os.path.join("C:/lib", "SDL2-2.0.3", "include", header)
 	with open(sdlpath) as infile:
@@ -33,13 +33,27 @@ def extractKeysFromSDL():
 						print(lua)
 
 
+def extractKeysFromAndroidSDK():
+	"""Print key value/id pairs for the Android SDK to stdout."""
+	srcfile = "KeyEvent.java"
+	sdlpath = os.path.join("C:/Users", "Jim", "AppData", "Local", "Android", "sdk", "sources", "android-23", "android", "view", srcfile)
+	with open(sdlpath) as infile:
+		for line in infile:
+			if "KEYCODE_" in line:
+				arr = line.split()
+				if len(arr) > 5 and arr[5] == "=":
+					#print(arr)
+					lua = '    [{0}] = "{1}",'.format(arr[6][:-1], arr[4].replace("KEYCODE", "KEY").upper())
+					print(lua)
+
 
 #
 # Main: enter here
 #
 def main(argv=None):
 	#extractKeysFromGlfw()
-	extractKeysFromSDL()
+	#extractKeysFromSDL()
+	extractKeysFromAndroidSDK()
 
 if __name__ == "__main__":
 	sys.exit(main(sys.argv[1:]))
