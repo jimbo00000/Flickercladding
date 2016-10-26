@@ -241,9 +241,12 @@ function on_lua_keypressed(key, scancode, action, mods)
     print("KEY: "..key.." "..scancode.." "..action.." "..mods)
 
     --TODO: Set some flag in CMake, send it here via a new entry point
-    --local lookup = kc.glfw_keycodes_map[key]
+    local lookup = kc.glfw_keycodes_map[key]
     --local lookup = kc.sdl_keycodes_map[key]
-    local lookup = kc.android_keycodes_map[key]
+    
+    if ANDROID then
+        lookup = kc.android_keycodes_map[key]
+    end
     print("Lookup: ", lookup)
 
     -- TODO an escape sequence here?
