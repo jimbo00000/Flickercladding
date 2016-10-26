@@ -61,7 +61,9 @@ public class FlickercladdingActivity extends Activity implements SensorEventList
 
     public void onSensorChanged(SensorEvent event) {
         //Log.w("ACTIV", String.format("sensor %f %f %f\n", event.values[0], event.values[1], event.values[2]));
-        FlickercladdingLib.onAccelerometerChange(event.values[0], event.values[1], event.values[2], event.accuracy);
+
+        // These events are rather slow to update and somewhat annoying. Leave them off for now.
+        //FlickercladdingLib.onAccelerometerChange(event.values[0], event.values[1], event.values[2], event.accuracy);
     }
 
     @Override
@@ -72,7 +74,11 @@ public class FlickercladdingActivity extends Activity implements SensorEventList
         char character = (char) keyunicode;
 
         //Log.w("dispatchKeyEvent", String.format("key: %d %d(%c) %d %x", keycode, keyunicode, character, keyaction, event.getMetaState()));
-        FlickercladdingLib.onKeyEvent(keycode, keyunicode, keyaction, event.getMetaState());
+        if (keyaction == 1)
+        {
+            // Only log key down events for now
+            FlickercladdingLib.onKeyEvent(keycode, keyunicode, keyaction, event.getMetaState());
+        }
         return super.dispatchKeyEvent(event);
     }
 }
