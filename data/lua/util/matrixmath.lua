@@ -338,7 +338,7 @@ function matrixmath.quat_to_matrix(q)
 end
 
 -- https://github.com/grrrwaaa/gct753/blob/master/modules/quat.lua
-function matrixmath.quat_to_matrix(m)
+function matrixmath.matrix_to_quat(m)
     local ux = {m[1], m[5], m[9]}
     local uy = {m[2], m[6], m[10]}
     local uz = {m[3], m[7], m[11]}
