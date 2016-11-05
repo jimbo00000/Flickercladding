@@ -4,7 +4,7 @@ shaderfunctions = {}
 function print_stack_trace()
     local tb = debug.traceback()
     local i = 0
-    for x=0,2 do i = string.find(tb, '\n', i+1) end -- Chop off top of call stack(we're here)
+    for x=0,3 do i = string.find(tb, '\n', i+1) end -- Chop off top of call stack(we're here)
     local j = string.find(tb, '\n', i+1) -- Chop off bottom of call stack
     print(string.sub(tb,i+1,j))
 end
