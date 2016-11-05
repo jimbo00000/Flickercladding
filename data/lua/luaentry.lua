@@ -16,6 +16,8 @@ local lastSceneChangeTime = 0
 
 local scene_modules = {
     "scene.colorcube",
+    "scene.tunnel_frag",
+    "scene.tunnel_vert",
     "scene.stringedit_scene",
     "scene.fullscreen_quad",
     "scene.touch_shader2",
