@@ -1,6 +1,14 @@
 -- shaderfunctions.lua
 shaderfunctions = {}
 
+function print_stack_trace()
+    local tb = debug.traceback()
+    local i = 0
+    for x=0,2 do i = string.find(tb, '\n', i+1) end -- Chop off top of call stack(we're here)
+    local j = string.find(tb, '\n', i+1) -- Chop off bottom of call stack
+    print(string.sub(tb,i+1,j))
+end
+
 local openGL = require("opengl")
 local ffi = require("ffi")
 
@@ -33,8 +41,8 @@ function load_and_compile_shader_source(src, type)
         local cw = glIntv(0)
         local logp = glCharv(ill[0] + 1)
         gl.glGetShaderInfoLog(s, ill[0], cw, logp)
-        print("__ShaderInfoLog: "..ffi.string(logp))
-        assert(false, ffi.string(logp))
+        print("__ShaderInfoLog: \n"..ffi.string(logp))
+        print_stack_trace()
         return 0
     end
 
@@ -89,9 +97,9 @@ function shaderfunctions.make_shader_from_source(sources)
         local logp = glCharv(ill[0] + 1)
         gl.glGetProgramInfoLog(program, ill[0], cw, logp)
         print("__ProgramInfoLog: "..ffi.string(logp))
-        local tb = debug.traceback()
-        print(tb)
-        assert(false, ffi.string(logp))
+        print_stack_trace()
+        --os.exit()
+        return 0
     end
 
     gl.glUseProgram(0)
