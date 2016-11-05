@@ -20,7 +20,7 @@ local progs = {}
 local perturbverts_comp_src = [[
 #version 310 es
 #line 22
-layout(local_size_x=256) in;
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer pblock { vec4 positions[]; };
 
 vec3 displacePoint(vec3 p)
@@ -48,7 +48,7 @@ local function perturbVertexPositions()
     local prog = progs.perturbverts
     gl.glUseProgram(prog)
 
-    gl.glDispatchCompute(num_verts/256+1, 1, 1)
+    gl.glDispatchCompute(num_verts/128+1, 1, 1)
     gl.glUseProgram(0)
 end
 
@@ -56,7 +56,7 @@ end
 local pushout_sphere_src = [[
 #version 310 es
 #line 58
-layout(local_size_x=256) in;
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer pblock { vec4 positions[]; };
 
 uniform vec3 crater_center;
@@ -157,7 +157,7 @@ function create_random_crater()
     local ust_loc = gl.glGetUniformLocation(prog, "strength")
     gl.glUniform1f(ust_loc, strength)
 
-    gl.glDispatchCompute(num_verts/256, 1, 1)
+    gl.glDispatchCompute(num_verts/128, 1, 1)
     gl.glUseProgram(0)
 end
 

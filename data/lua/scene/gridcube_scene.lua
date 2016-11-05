@@ -118,7 +118,7 @@ end
 local initverts_comp_src = [[
 #version 310 es
 #line 115
-layout(local_size_x=256) in;
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer nblock { vec4 positions[]; };
 
 uniform int uFacets;
@@ -180,7 +180,7 @@ local function init_vertex_positions(facets)
         local off = (i-1) * f_1 * f_1
         gl.glUniform1i(uo_loc, off)
         gl.glUniformMatrix4fv(um_loc, 1, GL.GL_FALSE, glFloatv(16, matrices[i]))
-        gl.glDispatchCompute(num_verts/256+1, 1, 1)
+        gl.glDispatchCompute(num_verts/128+1, 1, 1)
     end
 
     gl.glUseProgram(0)
@@ -193,7 +193,7 @@ end
 local initfaces_comp_src = [[
 #version 310 es
 #line 190
-layout(local_size_x=256) in;
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer iblock { uint indices[]; };
 
 uniform int uFacets;
@@ -246,7 +246,7 @@ local function set_face_indices(facets)
     for g=0,5 do
         gl.glUniform1i(uo_loc, g * tri_idxs_per_face)
         gl.glUniform1i(uv_loc, g * verts_per_face)
-        gl.glDispatchCompute(tri_idxs_per_face/256+1, 1, 1)
+        gl.glDispatchCompute(tri_idxs_per_face/128+1, 1, 1)
         gl.glMemoryBarrier(GL.GL_SHADER_STORAGE_BARRIER_BIT)
     end
     gl.glUseProgram(0)
@@ -261,8 +261,8 @@ end
 local clear_normals_comp_src = [[
 #version 310 es
 
-#define THREADS_PER_BLOCK 256
-layout(local_size_x=256) in;
+#define THREADS_PER_BLOCK 128
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer nblock { vec4 normals[]; };
 
 void main()
@@ -278,7 +278,7 @@ local function clear_normals()
     gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 0, nvbo[0])
     local prog = progs.clearnorms
     gl.glUseProgram(prog)
-    gl.glDispatchCompute(num_verts/256+1, 1, 1)
+    gl.glDispatchCompute(num_verts/128+1, 1, 1)
     gl.glUseProgram(0)
 end
 
@@ -291,7 +291,7 @@ end
 local calc_normals_comp_src = [[
 #version 310 es
 #line 288
-layout(local_size_x=256) in;
+layout(local_size_x=128) in;
 layout(std430, binding=0) buffer vblock { vec4 positions[]; };
 layout(std430, binding=1) coherent buffer nblock { vec4 normals[]; };
 
@@ -371,7 +371,7 @@ local function recalculate_normals()
             gl.glUniform1i(utm_loc, m)
             for i=0,2 do
                 gl.glUniform1i(uti_loc, i)
-                gl.glDispatchCompute(num_tri_idxs/256+1, 1, 1)
+                gl.glDispatchCompute(num_tri_idxs/128+1, 1, 1)
                 gl.glMemoryBarrier(GL.GL_ALL_BARRIER_BITS)
             end
         end
