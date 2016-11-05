@@ -29,12 +29,12 @@ local tex_w, tex_h
 local basic_vert = [[
 #version 310 es
 
-layout(location = 0) in vec4 vPosition;
-layout(location = 1) in vec4 vColor;
+in vec4 vPosition;
+in vec4 vColor;
 out vec3 vfColor;
 
-layout(location = 0) uniform mat4 mvmtx;
-layout(location = 1) uniform mat4 prmtx;
+uniform mat4 mvmtx;
+uniform mat4 prmtx;
 
 void main()
 {
@@ -54,8 +54,8 @@ precision mediump int;
 in vec3 vfColor;
 out vec4 fragColor;
 
-layout(location = 2) uniform sampler2D tex;
-layout(location = 3) uniform vec3 uColor;
+uniform sampler2D tex;
+uniform vec3 uColor;
 
 void main()
 {
@@ -108,8 +108,11 @@ function GLFont:initGL()
         fsrc = basic_frag,
         })
 
-    gl.glEnableVertexAttribArray(0)
-    gl.glEnableVertexAttribArray(1)
+    local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
+    local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
+
+    gl.glEnableVertexAttribArray(vpos_loc)
+    gl.glEnableVertexAttribArray(vcol_loc)
     gl.glBindVertexArray(0)
 
     local texId = ffi.new("GLuint[1]")
@@ -165,19 +168,27 @@ function GLFont:render_string(mview, proj, color, str)
     if #str == 0 then return end
     if self.prog == 0 then return end
 
+    local umv_loc = gl.glGetUniformLocation(self.prog, "mvmtx")
+    local upr_loc = gl.glGetUniformLocation(self.prog, "prmtx")
+    local ut_loc = gl.glGetUniformLocation(self.prog, "tex")
+    local uc_loc = gl.glGetUniformLocation(self.prog, "uColor")
+
     gl.glUseProgram(self.prog)
-    gl.glUniformMatrix4fv(0, 1, GL.GL_FALSE, glFloatv(16, mview))
-    gl.glUniformMatrix4fv(1, 1, GL.GL_FALSE, glFloatv(16, proj))
+    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, mview))
+    gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
 
     gl.glActiveTexture(GL.GL_TEXTURE0)
     gl.glBindTexture(GL.GL_TEXTURE_2D, self.tex)
-    gl.glUniform1i(2, 0)
+    gl.glUniform1i(ut_loc, 0)
 
-    gl.glUniform3f(3, color[1], color[2], color[3])
+    gl.glUniform3f(uc_loc, color[1], color[2], color[3])
 
     gl.glEnable(GL.GL_BLEND)
     gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
     gl.glBindVertexArray(self.vao)
+
+    local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
+    local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
 
     if self.string_vbo_table[str] == nil then
         --print("First time seeing "..str)
@@ -214,14 +225,14 @@ function GLFont:render_string(mview, proj, color, str)
             gl.glGenBuffers(1, newvbov)
             gl.glBindBuffer(GL.GL_ARRAY_BUFFER, newvbov[0])
             gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-            gl.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+            gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
             table.insert(self.vbos, newvbov)
 
             local newvbot = glIntv(0)
             gl.glGenBuffers(1, newvbot)
             gl.glBindBuffer(GL.GL_ARRAY_BUFFER, newvbot[0])
             gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(texs), texs, GL.GL_STATIC_DRAW)
-            gl.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+            gl.glVertexAttribPointer(vcol_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
             table.insert(self.vbos, newvbot)
 
             self.string_vbo_table[str] = {newvbov, newvbot}
@@ -235,13 +246,13 @@ function GLFont:render_string(mview, proj, color, str)
         local strVBO = self.string_vbo_table[str]
         strVBO.age = 0
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, strVBO[1][0])
-        gl.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+        gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, strVBO[2][0])
-        gl.glVertexAttribPointer(1, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+        gl.glVertexAttribPointer(vcol_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     end
 
-    gl.glEnableVertexAttribArray(0)
-    gl.glEnableVertexAttribArray(1)
+    gl.glEnableVertexAttribArray(vpos_loc)
+    gl.glEnableVertexAttribArray(vcol_loc)
 
     gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3*2*#str)
 
