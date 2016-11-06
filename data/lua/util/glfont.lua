@@ -15,16 +15,38 @@ local glSizeiv   = ffi.typeof('GLsizei[?]')
 local glFloatv   = ffi.typeof('GLfloat[?]')
 local glConstCharpp = ffi.typeof('const GLchar *[1]')
 
-local vao = 0
-local prog = 0
-local tex = 0
-local vbos = {}
-local texs = {}
-local font
-local string_vbo_table = {}
 
-local dataDir = nil
-local tex_w, tex_h
+-- this is our GLFont class
+GLFont = {}
+GLFont.__index = GLFont
+
+-- and its new function
+function GLFont.new(...)
+    local self = setmetatable({}, GLFont)
+    if self.init ~= nil and type(self.init) == "function" then
+        self:init(...)
+    end 
+    return self
+end
+
+function GLFont:init(fontfile, imagefile)
+    self.fontfile = fontfile
+    self.imagefile = imagefile
+    -- read glyphs from font.txt and store them in chars table
+    self.chars = {}
+
+    self.vao = 0
+    self.prog = 0
+    self.tex = 0
+    self.vbos = {}
+    self.texs = {}
+    self.string_vbo_table = {}
+    self.dataDir = nil
+end
+
+function GLFont:setDataDirectory(dir)
+    self.dataDir = dir
+end
 
 local basic_vert = [[
 #version 310 es
@@ -65,43 +87,11 @@ void main()
 }
 ]]
 
--- this is our GLFont class
-GLFont = {}
-GLFont.__index = GLFont
-
--- and its new function
-function GLFont.new(...)
-    local self = setmetatable({}, GLFont)
-    if self.init ~= nil and type(self.init) == "function" then
-        self:init(...)
-    end 
-    return self
-end
-
-function GLFont:init(fontfile, imagefile)
-    self.fontfile = fontfile
-    self.imagefile = imagefile
-    -- read glyphs from font.txt and store them in chars table
-    self.chars = {}
-
-    self.vao = 0
-    self.prog = 0
-    self.tex = 0
-    self.vbos = {}
-    self.texs = {}
-    self.string_vbo_table = {}
-    self.dataDir = nil
-end
-
-function GLFont:setDataDirectory(dir)
-    self.dataDir = dir
-end
-
 function GLFont:initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     self.vao = vaoId[0]
-    gl.glBindVertexArray(vao)
+    gl.glBindVertexArray(self.vao)
 
     self.prog = sf.make_shader_from_source({
         vsrc = basic_vert,
