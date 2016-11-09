@@ -26,8 +26,7 @@ local basic_vert = [[
 #version 310 es
 
 #ifdef GL_ES
-precision mediump float;
-precision mediump int;
+precision highp float;
 #endif
 
 in vec4 vPosition;
@@ -58,7 +57,7 @@ local basic_frag = [[
 #version 310 es
 
 #ifdef GL_ES
-precision mediump float;
+precision highp float;
 precision mediump int;
 #endif
 
