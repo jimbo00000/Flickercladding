@@ -1,4 +1,11 @@
--- hybrid_scene.lua
+--[[ hybrid_scene.lua
+
+    A combination of two scenes with two different rendering
+    techniques and a font renderer to label each type of object.
+
+    All rendering code is owned by the respective scene types and
+    is simply invoked from this module.
+]]
 hybrid_scene = {}
 
 local sts = require("scene.shadertoy_scene2")

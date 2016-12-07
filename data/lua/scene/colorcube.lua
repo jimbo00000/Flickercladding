@@ -20,6 +20,7 @@ local glFloatv   = ffi.typeof('GLfloat[?]')
 local vbos = {}
 local vao = 0
 local prog = 0
+local rotation = 0
 
 local basic_vert = [[
 #version 310 es
@@ -130,21 +131,19 @@ function colorcube.exitGL()
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
-local rotation_matrix = {}
-mm.make_identity_matrix(rotation_matrix)
-
 function colorcube.render_for_one_eye(view, proj)
-
-
-    local mx = {}
-    for i=1,16 do mx[i] = view[i] end
-    mm.post_multiply(mx, rotation_matrix)
+    -- Rotate the cube slowly around its center
+    local m = {}
+    for i=1,16 do m[i] = view[i] end
+    mm.glh_rotate(m, 30*rotation, 0,1,0)
+    mm.glh_rotate(m, 13*rotation, 1,0,0)
+    mm.glh_translate(m, -.5,-.5,-.5)
 
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
     gl.glUseProgram(prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
-    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, mx))
+    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, m))
     gl.glBindVertexArray(vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6*3*2, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
@@ -152,42 +151,7 @@ function colorcube.render_for_one_eye(view, proj)
 end
 
 function colorcube.timestep(absTime, dt)
+    rotation = absTime
 end
-
-function cross(a, b)
-    c = {
-        a[2]*b[3] - a[3]*b[2],
-        a[3]*b[1] - a[1]*b[3],
-        a[1]*b[2] - a[2]*b[1],
-    }
-    return c
-end
-
-function normalize(v)
-    local length = math.sqrt(v[1]*v[1] + v[2]*v[2] + v[3]*v[3])
-    for i=1,3 do v[i] = v[i] / length end
-end
-
-function colorcube.accelerometer(x,y,z,accuracy)
-    local down = {x,y,z}
-    normalize(down)
-
-    local right = {1,0,0}
-    if down[1] < .0001 then
-        right = {0,1,0}
-    end
-    local back = cross(down, right)
-    right = cross(back, down)
-    normalize(back)
-    normalize(right)
-
-    rotation_matrix = {
-        right[1], right[2], right[3], 0,
-        -down[1], -down[2], -down[3], 0,
-        back[1], back[2], back[3], 0,
-        0,0,0,1
-    }
-end
-
 
 return colorcube

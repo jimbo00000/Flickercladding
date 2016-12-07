@@ -37,19 +37,13 @@ local rm_frag = [[
 #version 310 es
 
 #ifdef GL_ES
-precision highp float;
+precision mediump float;
 precision mediump int;
 #endif
 
 in vec2 vfUV;
 out vec4 fragColor;
 
-// ShaderToy Inputs:
-uniform vec3 iResolution;
-
-// Oculus-specific additions:
-uniform float u_eyeballCenterTweak;
-uniform float u_fov_y_scale;
 uniform mat4 mvmtx;
 uniform mat4 prmtx;
 
@@ -314,21 +308,6 @@ function shadertoy_scene.render_for_one_eye(view, proj)
     --gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
     local prog = rwwtt_prog
     gl.glUseProgram(prog)
-
-    local ugt_loc = gl.glGetUniformLocation(prog, "iGlobalTime")
-    gl.glUniform1f(ugt_loc, globalTime)
-
-    local vp = ffi.new("GLuint[4]", 0,0,0,0)
-    gl.glGetIntegerv(GL.GL_VIEWPORT, vp)
-    local w, h = vp[2], vp[3]
-    local ures_loc = gl.glGetUniformLocation(prog, "iResolution")
-    gl.glUniform3f(ures_loc, w, h, 0)
-
-    local uec_loc = gl.glGetUniformLocation(prog, "u_eyeballCenterTweak")
-    gl.glUniform1f(uec_loc, proj[9])
-    local ufy_loc = gl.glGetUniformLocation(prog, "u_fov_y_scale")
-    local cot_fovby2 = proj[6]
-    gl.glUniform1f(ufy_loc, 1/cot_fovby2)
 
     local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
     gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, view))
