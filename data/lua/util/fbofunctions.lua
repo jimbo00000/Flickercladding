@@ -27,7 +27,7 @@ function fbofunctions.allocate_fbo(w, h, use_depth)
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAX_LEVEL, 0)
         gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, GL.GL_DEPTH_COMPONENT,
                       w, h, 0,
-                      GL.GL_DEPTH_COMPONENT, GL.GL_UNSIGNED_BYTE, nil)
+                      GL.GL_DEPTH_COMPONENT, GL.GL_UNSIGNED_SHORT, nil)
         gl.glBindTexture(GL.GL_TEXTURE_2D, 0)
         gl.glFramebufferTexture2D(GL.GL_FRAMEBUFFER, GL.GL_DEPTH_ATTACHMENT, GL.GL_TEXTURE_2D, fbo.depth, 0)
     end
