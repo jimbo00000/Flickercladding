@@ -17,6 +17,7 @@ local lastSceneChangeTime = 0
 local scene_modules = {
     "scene.colorcube",
     "scene.fbo_scene",
+    "scene.cubemap_scene",
     "scene.moon_scene3",
     "scene.tunnel_frag",
     "scene.tunnel_vert",

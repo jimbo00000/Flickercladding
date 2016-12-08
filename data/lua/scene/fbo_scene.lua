@@ -308,4 +308,37 @@ function fbo_scene.keypressed(key)
     if name then fbo_scene.switch_to_scene(name) end
 end
 
+local scene_names = {
+    "scene.hybrid_scene",
+    "scene.colorcube",
+    "scene.clockface",
+    "scene.vsfstri",
+    "scene.tunnel_vert",
+    "scene.nbody07",
+    "scene.molecule",
+    --"scene.attrlesstri",
+    "scene.cubemap_scene",
+};
+
+local action_types = {
+  [0] = "Down",
+  [1] = "Up",
+  [2] = "Move",
+  [3] = "Cancel",
+  [4] = "Outside",
+  [5] = "PointerDown",
+  [6] = "PointerUp",
+}
+
+local scene_idx = 0
+function fbo_scene.onSingleTouch(pointerid, action, x, y)
+    local actionflag = action % 255
+    local a = action_types[actionflag]
+    if a == "Down" or a == "PointerDown" then
+        scene_idx = scene_idx + 1
+        if scene_idx > #scene_names then scene_idx = 1 end
+        fbo_scene.switch_to_scene(scene_names[scene_idx])
+    end
+end
+
 return fbo_scene
