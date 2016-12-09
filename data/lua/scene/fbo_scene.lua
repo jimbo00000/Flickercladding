@@ -184,23 +184,6 @@ function render_pre_pass(view, proj)
     end
 end
 
-function get_fbo_first_source()
-    if PostFX.get_filters then
-        local filts = PostFX.get_filters()
-        if filts then
-            local last = filts[1]
-            if last then
-                return last.fbo.tex
-            end
-        else
-            return 0
-        end
-    elseif PostFX.fbo then
-        return PostFX.fbo.tex
-    end
-    return 0
-end
-
 -- Return a list of textures from the filter chain
 function get_fbo_tex_sources()
     texs = {}
@@ -235,30 +218,63 @@ function render_fbo_quad(view, proj, tex)
     gl.glUseProgram(0)
 end
 
--- Draw the 3D scene within a scene
+-- Draw the 3D scene within a scene with a textured quad showing
+-- the content of the first fbo floating right there in space.
 function render_scene_in_space(view, proj)
     gl.glEnable(GL.GL_DEPTH_TEST)
     local m = {}
     for i=1,16 do m[i] = view[i] end
 
+    -- External camera transform; move the whole scene
+    -- back a bit and turn.
     local txfm = {}
     mm.make_identity_matrix(txfm)
-    mm.glh_translate(txfm, 0,0,-2)
+    mm.glh_translate(txfm, 1,0,-2)
     mm.glh_rotate(txfm, 60, 0,1,0)
     mm.pre_multiply(m, txfm)
 
-    subject.render_for_one_eye(m, proj)
+    -- Render the first fbo quad in space behind the view frustum
     local q = {}
     for i=1,16 do q[i] = m[i] end
     local s = 3.5
     mm.glh_scale(q, s,s,1)
     --mm.glh_translate(q, 1,1,0)
     mm.glh_translate(q, -.5,-.5,-1.01)
-    render_fbo_quad(q, proj, get_fbo_first_source())
+    local texs = get_fbo_tex_sources()
+    for _,t in pairs(texs) do
+        render_fbo_quad(q, proj, t)
+        mm.glh_translate(q, -.2,.1,-1)
+    end
 
+    -- Render the scene from an externasl perspective
+    subject.render_for_one_eye(m, proj)
+
+    -- Render a representation of the viewing frustum of the other camera
     local z =2
     mm.glh_translate(m, 0,0,z)
     frustum.render_for_one_eye(m, proj)
+end
+
+-- Draw each fbo quad in the filter chain as a HUD
+-- in screen space.
+function render_hud(view, proj)
+    gl.glDisable(GL.GL_DEPTH_TEST)
+
+    local p = {}
+    mm.make_identity_matrix(p)
+    local v = {}
+    mm.make_identity_matrix(v)
+    -- Line up all quads along the right side of the screen
+    local s = .5
+    mm.glh_scale(v,s,s,s)
+    mm.glh_translate(v,1,1,0)
+
+    local texs = get_fbo_tex_sources()
+    for _,t in pairs(texs) do
+        render_fbo_quad(v, p, t)
+        mm.glh_translate(v, 0,-4/(#texs),0)
+    end
+    gl.glEnable(GL.GL_DEPTH_TEST)
 end
 
 function fbo_scene.render_for_one_eye(view, proj)
@@ -271,41 +287,13 @@ function fbo_scene.render_for_one_eye(view, proj)
     -- Regular camera controls for the view of the scene within a scene
     render_scene_in_space(view, proj)
 
-    -- Draw fbo quad again as a HUD, stuck to screen
     -- TODO: draw first
-    gl.glDisable(GL.GL_DEPTH_TEST)
-    local v = {}
-    mm.make_identity_matrix(v)
-    mm.glh_scale(v,1.2,1,1)
-    mm.glh_translate(v, 1,1,-1.5)
-    local texs = get_fbo_tex_sources()
-    for _,t in pairs(texs) do
-        render_fbo_quad(v, proj, t)
-        mm.glh_translate(v, 0,-1.1,0)
-    end
-    gl.glEnable(GL.GL_DEPTH_TEST)
+    render_hud(view, proj)
 end
 
 function fbo_scene.timestep(absTime, dt)
     subject.timestep(absTime, dt)
     if PostFX and PostFX.timestep then PostFX.timestep(absTime, dt) end
-end
-
-function fbo_scene.keypressed(key)
-    -- 49 == '1' in glfw
-    local scene_names = {
-        [49] = "scene.hybrid_scene",
-        [50] = "scene.colorcube",
-        [51] = "scene.clockface",
-        [52] = "scene.vsfstri",
-        [53] = "scene.tunnel_vert",
-        [54] = "scene.nbody07",
-        [55] = "scene.molecule",
-        [56] = "scene.attrlesstri",
-        [57] = "scene.cubemap_scene",
-    }
-    local name = scene_names[key]
-    if name then fbo_scene.switch_to_scene(name) end
 end
 
 local scene_names = {
@@ -316,9 +304,15 @@ local scene_names = {
     "scene.tunnel_vert",
     "scene.nbody07",
     "scene.molecule",
-    --"scene.attrlesstri",
+    "scene.fonttest_scene",
     "scene.cubemap_scene",
 };
+
+function fbo_scene.keypressed(key)
+    -- 49 == '1' in glfw
+    local name = scene_names[key - 49 + 1]
+    if name then fbo_scene.switch_to_scene(name) end
+end
 
 local action_types = {
   [0] = "Down",
