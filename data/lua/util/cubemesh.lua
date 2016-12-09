@@ -1,4 +1,4 @@
---[[ sdfmesh.lua
+--[[ cubemesh.lua
 
 ]]
 
@@ -9,18 +9,18 @@ local ffi = require("ffi")
 local glIntv   = ffi.typeof('GLint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
 
-SdfMesh = {}
-SdfMesh.__index = SdfMesh
+CubeMesh = {}
+CubeMesh.__index = CubeMesh
 
-function SdfMesh.new(...)
-    local self = setmetatable({}, SdfMesh)
+function CubeMesh.new(...)
+    local self = setmetatable({}, CubeMesh)
     if self.init ~= nil and type(self.init) == "function" then
         self:init(...)
     end 
     return self
 end
 
-function SdfMesh:init()
+function CubeMesh:init()
     self.num_verts = 0
     self.num_tri_idxs = 0
     self.subdivs = 256
@@ -54,7 +54,7 @@ void main()
     positions[index + uOffset] = uMatrix * v;
 }
 ]]
-function SdfMesh:init_vertex_positions(facets)
+function CubeMesh:init_vertex_positions(facets)
     local vvbo = self.vbos.vertices
     gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 0, vvbo[0])
 
@@ -141,7 +141,7 @@ void main()
     indices[index + uOffset] = uint(tris[triIdx]);
 }
 ]]
-function SdfMesh:set_face_indices(facets)
+function CubeMesh:set_face_indices(facets)
     local ivbo = self.vbos.elements
     gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 0, ivbo[0])
 
@@ -189,7 +189,7 @@ void main()
     normals[index] = n;
 }
 ]]
-function SdfMesh:clear_normals()
+function CubeMesh:clear_normals()
     local nvbo = self.vbos.normals
     gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 0, nvbo[0])
     local prog = self.progs.clearnorms
@@ -257,7 +257,7 @@ void main()
     }
 }
 ]]
-function SdfMesh:recalculate_normals()
+function CubeMesh:recalculate_normals()
     self:clear_normals()
 
     local vvbo = self.vbos.vertices
@@ -298,7 +298,7 @@ function SdfMesh:recalculate_normals()
 end
 
 -- Allocate vertex, normal and index data
-function SdfMesh:allocate_gridmesh_verts(facets)
+function CubeMesh:allocate_gridmesh_verts(facets)
     local s_1 = facets + 1
     self.num_verts = 6 * s_1 * s_1 -- 6 cube faces
     self.num_tri_idxs = 6 * 3 * 2 * facets * facets -- 6 faces, 2 triangles per square
@@ -324,7 +324,7 @@ function SdfMesh:allocate_gridmesh_verts(facets)
     self.vbos.elements = qvbo
 end
 
-function SdfMesh:initGL()
+function CubeMesh:initGL()
     self.progs.clearnorms = sf.make_shader_from_source({
         compsrc = clear_normals_comp_src,
         })
@@ -339,7 +339,7 @@ function SdfMesh:initGL()
     self:recalculate_normals()
 end
 
-function SdfMesh:exitGL()
+function CubeMesh:exitGL()
     for _,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
     end

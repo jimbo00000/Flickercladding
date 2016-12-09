@@ -24,13 +24,12 @@ local basic_vert = [[
 #version 300 es
 
 in vec2 vPosition;
-in vec2 vColor;
 
 out vec2 uv;
 
 void main()
 {
-    uv = .5*vColor + vec2(.5);
+    uv = .5*vPosition + vec2(.5);
     gl_Position = vec4(vPosition, 0., 1.);
 }
 ]]
@@ -76,7 +75,6 @@ function FullscreenShader:init_quad_attributes()
         })
 
     local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
-    local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
 
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
@@ -85,15 +83,7 @@ function FullscreenShader:init_quad_attributes()
     gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(self.vbos, vvbo)
 
-    local cvbo = glIntv(0)
-    gl.glGenBuffers(1, cvbo)
-    gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
-    gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vcol_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(self.vbos, cvbo)
-
     gl.glEnableVertexAttribArray(vpos_loc)
-    gl.glEnableVertexAttribArray(vcol_loc)
 
     local quads = glUintv(3*2, {
         0,1,2,
@@ -140,8 +130,12 @@ function FullscreenShader:exitGL()
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
-function FullscreenShader:render(view, proj)
+-- Pass in an optional closure to set uniform variables in self.prog.
+function FullscreenShader:render(view, proj, setvars)
     gl.glUseProgram(self.prog)
+
+    if setvars then setvars(self.prog) end
+
     gl.glBindVertexArray(self.vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)

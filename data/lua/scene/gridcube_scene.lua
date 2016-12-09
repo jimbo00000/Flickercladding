@@ -12,7 +12,7 @@
 ]]
 gridcube_scene = {}
 
-require("util.sdfmesh")
+require("util.cubemesh")
 local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
@@ -21,7 +21,7 @@ local sf = require("util.shaderfunctions")
 local glIntv   = ffi.typeof('GLint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
 
-local sdfmesh = nil -- Will hold our class instance
+local cubemesh = nil -- Will hold our class instance
 local vao = 0
 local progs = {}
 
@@ -95,9 +95,9 @@ void main()
 local function init_gridmesh_display_attribs(prog)
     local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
     local vnorm_loc = gl.glGetAttribLocation(prog, "vNormal")
-    gl.glBindBuffer(GL.GL_ARRAY_BUFFER, sdfmesh.vbos.vertices[0])
+    gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cubemesh.vbos.vertices[0])
     gl.glVertexAttribPointer(vpos_loc, 4, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    gl.glBindBuffer(GL.GL_ARRAY_BUFFER, sdfmesh.vbos.normals[0])
+    gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cubemesh.vbos.normals[0])
     gl.glVertexAttribPointer(vnorm_loc, 4, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     gl.glEnableVertexAttribArray(vpos_loc)
     gl.glEnableVertexAttribArray(vnorm_loc)
@@ -125,8 +125,8 @@ function gridcube_scene.initGL()
     vao = vaoId[0]
     gl.glBindVertexArray(vao)
 
-    sdfmesh = SdfMesh.new()
-    sdfmesh:initGL()
+    cubemesh = CubeMesh.new()
+    cubemesh:initGL()
 
     progs.meshvsfs = sf.make_shader_from_source({
         vsrc = basic_vert,
@@ -145,7 +145,7 @@ function gridcube_scene.exitGL()
     end
     progs = {}
 
-    sdfmesh:exitGL()
+    cubemesh:exitGL()
 
     local vaoId = ffi.new("GLuint[1]", vao)
     gl.glDeleteVertexArrays(1, vaoId)
@@ -171,7 +171,7 @@ function gridcube_scene.render_for_one_eye(view, proj)
     gl.glBindVertexArray(vao)
     --gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
     gl.glDrawElements(GL.GL_TRIANGLES,
-        sdfmesh.num_tri_idxs,
+        cubemesh.num_tri_idxs,
         GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
 
@@ -186,12 +186,13 @@ function gridcube_scene.keypressed(ch)
     if ch == 'l' then return end
 
     if ch == 'n' then
-        sdfmesh:recalculate_normals()
+        cubemesh:recalculate_normals()
     end
 end
 
-function gridcube_scene.get_vertices_vbo() return sdfmesh.vbos.vertices end
-function gridcube_scene.get_num_verts() return sdfmesh.num_verts end
-function gridcube_scene.recalc_normals() sdfmesh:recalculate_normals() end
+function gridcube_scene.get_cubemesh() return cubemesh end
+function gridcube_scene.get_vertices_vbo() return cubemesh.vbos.vertices end
+function gridcube_scene.get_num_verts() return cubemesh.num_verts end
+function gridcube_scene.recalc_normals() cubemesh:recalculate_normals() end
 
 return gridcube_scene

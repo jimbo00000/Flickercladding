@@ -27,11 +27,11 @@ local prog = 0
 local basic_vert = [[
 #version 310 es
 
-layout(location = 0) in vec4 vPosition;
-layout(location = 1) in vec4 vColor;
+in vec4 vPosition;
+in vec4 vColor;
 
-layout(location = 0) uniform mat4 mvmtx;
-layout(location = 1) uniform mat4 prmtx;
+uniform mat4 mvmtx;
+uniform mat4 prmtx;
 
 out vec3 vfColor;
 
@@ -68,31 +68,25 @@ local function init_tri_attributes()
         0,1,0,
         })
 
+    local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
+    local vcol_loc = gl.glGetAttribLocation(prog, "vColor")
+
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(0, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(vbos, cvbo)
 
-    gl.glEnableVertexAttribArray(0)
-    gl.glEnableVertexAttribArray(1)
-
-    local quads = glUintv(6*6, {
-        0,1,2,
-    })
-    local qvbo = glIntv(0)
-    gl.glGenBuffers(1, qvbo)
-    gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, qvbo[0])
-    gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, ffi.sizeof(quads), quads, GL.GL_STATIC_DRAW)
-    table.insert(vbos, qvbo)
+    gl.glEnableVertexAttribArray(vpos_loc)
+    gl.glEnableVertexAttribArray(vcol_loc)
 end
 
 function vsfstri.initGL()
@@ -123,10 +117,12 @@ end
 
 function vsfstri.render_for_one_eye(view, proj)
     gl.glUseProgram(prog)
-    gl.glUniformMatrix4fv(0, 1, GL.GL_FALSE, glFloatv(16, view))
-    gl.glUniformMatrix4fv(1, 1, GL.GL_FALSE, glFloatv(16, proj))
+    local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
+    local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
+    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, view))
+    gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
     gl.glBindVertexArray(vao)
-    gl.glDrawElements(GL.GL_TRIANGLES, 3, GL.GL_UNSIGNED_INT, nil)
+    gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
     gl.glBindVertexArray(0)
     gl.glUseProgram(0)
 end

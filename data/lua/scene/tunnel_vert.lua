@@ -1,7 +1,8 @@
---[[ tunnel_frag.lua
+--[[ tunnel_vert.lua
 
-    Generate a tunnel_frag mesh on the CPU using a loop.
-
+    Generate a cylindrical mesh on the CPU using a loop and displace
+    vertex locations in the vertex shader during draw for a wavy
+    tunnel effect.
 ]]
 tunnel_frag = {}
 

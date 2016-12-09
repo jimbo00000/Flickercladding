@@ -36,6 +36,8 @@ function Slideshow:init(strings)
     if strings.bullets then
         self.bullet_points = strings.bullets
     end
+
+    self.copyright = "(c) Jim Susinno 2016"
 end
 
 function Slideshow:initGL(dataDir)
@@ -56,28 +58,47 @@ function Slideshow:draw_text()
     gl.glGetIntegerv(GL.GL_VIEWPORT, vp)
     local win_w,win_h = vp[2]-vp[0], vp[3]-vp[1]
 
-    local m = {}
     local p = {}
-    mm.make_identity_matrix(m)
-    mm.glh_translate(m, 90, 40, 0)
-    mm.glh_ortho(p, 0, win_w, win_h, 0, -1, 1)
+
+    local w,h = 1200,900
+    local rw,rh = win_w/w, win_h/h
+    if rw > rh then
+        w,h = win_w/rh, win_h/rh
+    elseif rw < rh then
+        w,h = win_w/rw, win_h/rw
+    end
+    mm.glh_ortho(p, 0, w, h, 0, -1, 1)
+
 
     local title = self.title
     local bullet_points = self.bullet_points
-
     local col = {0,0,0}
+
+    local m = {}
+    mm.make_identity_matrix(m)
+    mm.glh_translate(m, 90, 40, 0)
     self.glfont:render_string(m, p, col, title)
 
-    local lineh = 140
-    local s = .7
+    mm.make_identity_matrix(m)
+    local s = .68
     mm.glh_scale(m, s,s,s)
-    mm.glh_translate(m, 40, lineh, 0)
+    local lineh = 170
+    mm.glh_translate(m, 270, 60 + lineh, 0)
 
     for i=1,self.shown_lines do
         if bullet_points[i] then
             mm.glh_translate(m, 0, lineh, 0)
             self.glfont:render_string(m, p, col, bullet_points[i])
         end
+    end
+
+    if self.copyright then
+        mm.make_identity_matrix(m)
+        local gray = {.5,.5,.5}
+        local s = .25
+        mm.glh_translate(m, w-300, h-50, 0)
+        mm.glh_scale(m, s,s,s)
+        self.glfont:render_string(m, p, gray, self.copyright)
     end
 end
 
