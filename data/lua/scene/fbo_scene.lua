@@ -225,6 +225,7 @@ function render_scene_in_space(view, proj)
     local m = {}
     for i=1,16 do m[i] = view[i] end
 
+--[[
     -- External camera transform; move the whole scene
     -- back a bit and turn.
     local txfm = {}
@@ -232,6 +233,8 @@ function render_scene_in_space(view, proj)
     mm.glh_translate(txfm, 1,0,-2)
     mm.glh_rotate(txfm, 60, 0,1,0)
     mm.pre_multiply(m, txfm)
+    ]]
+
 
     -- Render the first fbo quad in space behind the view frustum
     local q = {}
@@ -246,7 +249,7 @@ function render_scene_in_space(view, proj)
         mm.glh_translate(q, -.2,.1,-1)
     end
 
-    -- Render the scene from an externasl perspective
+    -- Render the scene from an external perspective
     subject.render_for_one_eye(m, proj)
 
     -- Render a representation of the viewing frustum of the other camera
@@ -282,12 +285,12 @@ function fbo_scene.render_for_one_eye(view, proj)
     local cam = {}
     mm.make_identity_matrix(cam)
     mm.glh_translate(cam, 0,0,-1)
-    render_pre_pass(cam, proj)
+    render_pre_pass(view, proj)
 
     -- Regular camera controls for the view of the scene within a scene
     render_scene_in_space(view, proj)
 
-    -- TODO: draw first
+    -- TODO: draw these first with depth written out as topmost
     render_hud(view, proj)
 end
 
@@ -311,7 +314,23 @@ local scene_names = {
 function fbo_scene.keypressed(key)
     -- 49 == '1' in glfw
     local name = scene_names[key - 49 + 1]
-    if name then fbo_scene.switch_to_scene(name) end
+    if name then fbo_scene.switch_to_scene(name) return end
+
+    -- 290 == F1 in glfw
+    PostFX.remove_effect_at_index(key - 290 + 1)
+    --print(key)
+
+    -- 70 == 'f' in glfw
+    local filter_names = {
+        "invert",
+        "hueshift",
+        "wiggle",
+        "wobble",
+        "convolve",
+        "scanline",
+        "passthrough",
+    }
+    PostFX.insert_effect_by_name(filter_names[key - 70 + 1])
 end
 
 local action_types = {

@@ -12,6 +12,7 @@ local openGL = require("opengl")
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
 local fbf = require("util.fbofunctions")
+local spf = require("effect.single_pass_filters")
 
 local glIntv   = ffi.typeof('GLint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
@@ -20,162 +21,49 @@ local vao = 0
 local vbos = {}
 local time = 0
 
-
-local filter_passthrough = [[
-void main()
-{
-    fragColor = texture(tex, uv);
-}
-]]
-
-local filter_invert = [[
-void main()
-{
-    fragColor = vec4(1.) - texture(tex, uv); // Invert color
-}
-]]
-
-local filter_bw = [[
-void main()
-{
-    fragColor = vec4(.3*length(texture(tex, uv))); // Black and white
-}
-]]
-
--- Standard image convolution by kernel
-local filter_convolve = [[
-uniform int ResolutionX;
-uniform int ResolutionY;
-
-#define KERNEL_SIZE 9
-float kernel[KERNEL_SIZE] = float[](
-#if 0
-    1./16., 2./16., 1./16.,
-    2./16., 4./16., 2./16.,
-    1./16., 2./16., 1./16.
-
-    0., 1., 0.,
-    1., -4., 1.,
-    0., 1., 0.
-#else
-    1., 2., 1.,
-    0., 0., 0.,
-    -1., -2., -1.
-#endif
-);
-
-void main()
-{
-    float step_x = 1./float(ResolutionX);
-    float step_y = 1./float(ResolutionY);
-
-    vec2 offset[KERNEL_SIZE] = vec2[](
-        vec2(-step_x, -step_y), vec2(0.0, -step_y), vec2(step_x, -step_y),
-        vec2(-step_x,     0.0), vec2(0.0,     0.0), vec2(step_x,     0.0),
-        vec2(-step_x,  step_y), vec2(0.0,  step_y), vec2(step_x,  step_y)
-    );
-
-    vec4 sum = vec4(0.);
-    int i;
-    for( i=0; i<KERNEL_SIZE; i++ )
-    {
-        vec4 tc = texture(tex, uv + offset[i]);
-        sum += tc * kernel[i];
-    }
-    if (sum.x + sum.y + sum.z > .1)
-        sum = vec4(vec3(1.)-sum.xyz,1.);
-    fragColor = sum;
-}
-]]
-
--- http://haxepunk.com/documentation/tutorials/post-process/
-local filter_scanline = [[
-uniform int ResolutionX;
-uniform int ResolutionY;
-uniform float scale = 3.0;
-
-void main()
-{
-    if (mod(floor(uv.y * ResolutionY / scale), 2.0) == 0.0)
-        fragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    else
-        fragColor = texture(tex, uv);
-}
-]]
-
-local filter_wiggle = [[
-uniform float time;
-
-void main()
-{
-    vec2 tc = uv + .1*vec2(sin(time), cos(.7*time));
-    fragColor = texture(tex, tc);
-}
-]]
-
-local filter_wobble = [[
-uniform float time;
-
-void main()
-{
-    vec2 fromCenter = uv - vec2(.5);
-    float len = length(fromCenter);
-    float f = 1.05 + .05 * sin(5.*time);
-    len = pow(len, f);
-
-    vec2 adjFromCenter = len * normalize(fromCenter);
-    vec2 uv01 = vec2(.5) + adjFromCenter;
-    fragColor = texture(tex, uv01);
-}
-]]
-
-local filter_hueshift = [[
-uniform float time;
-
-// http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
-vec3 rgb2hsv(vec3 c)
-{
-    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-    vec4 p = c.g < c.b ? vec4(c.bg, K.wz) : vec4(c.gb, K.xy);
-    vec4 q = c.r < p.x ? vec4(p.xyw, c.r) : vec4(c.r, p.yzx);
-
-    float d = q.x - min(q.w, q.y);
-    float e = 1.0e-10;
-    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-}
-
-vec3 hsv2rgb(vec3 c)
-{
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
-void main()
-{
-    vec3 col = texture(tex, uv).xyz;
-    vec3 hsv = rgb2hsv(col);
-    hsv.x += .5 * time;
-    fragColor = vec4(hsv2rgb(hsv), 1.);
-}
-]]
-
 require("util.filter")
 local filters = {}
---table.insert(filters, Filter.new({name="Downsample",source=filter_passthrough,sample_factor=1/8}))
---table.insert(filters, Filter.new({name="Black & White",source=filter_bw}))
---table.insert(filters, Filter.new({name="Invert",source=filter_invert}))
-table.insert(filters, Filter.new({name="Hue Shift",source=filter_hueshift}))
---table.insert(filters, Filter.new({name="Wiggle",source=filter_wiggle}))
-table.insert(filters, Filter.new({name="Wobble",source=filter_wobble}))
-table.insert(filters, Filter.new({name="Edge Detect",source=filter_convolve}))
---table.insert(filters, Filter.new({name="Scanline",source=filter_scanline}))
-table.insert(filters, Filter.new({name="Passthrough",source=filter_passthrough}))
+
+function effect_chain.insert_effect_by_name(name,w,h)
+    if not name then return end
+    local filt = Filter.new{name=name, source=spf[name]}
+    filt:initGL()
+
+    -- Get w,h from the first fbo in the list if not specified.
+    if not w then
+        local first = filters[1].fbo
+        w,h = first.w, first.h
+    end
+    filt:resize(w,h)
+
+    -- Re-use the VBO for each program
+    local vpos_loc = gl.glGetAttribLocation(filt.prog, "vPosition")
+    gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glEnableVertexAttribArray(vpos_loc)
+
+    table.insert(filters, filt)
+end
+
+function effect_chain.remove_effect_at_index(index)
+    if #filters <= 1 then return end
+    if index < 1 or index > #filters then return end
+    table.remove(filters, index)
+end
 
 -- For accessing filter list outside of module
 function effect_chain.get_filters()
     return filters
 end
+
+local filter_names = {
+    "invert",
+    "hueshift",
+    "wiggle",
+    "wobble",
+    "convolve",
+    "scanline",
+    "passthrough",
+}
 
 local function make_quad_vbos()
     local vvbo = glIntv(0)
@@ -200,14 +88,9 @@ function effect_chain.initGL(w,h)
 
     make_quad_vbos()
 
-    for _,f in pairs(filters) do
-        f:initGL()
-        f:resize(w,h)
-
-        -- Re-use the VBO for each program
-        local vpos_loc = gl.glGetAttribLocation(f.prog, "vPosition")
-        gl.glVertexAttribPointer(vpos_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-        gl.glEnableVertexAttribArray(vpos_loc)
+    --table.insert(filters, Filter.new({name="Downsample",source=spf["passthrough"],sample_factor=1/4}))
+    for _,n in pairs(filter_names) do
+        effect_chain.insert_effect_by_name(n,w,h)
     end
 
     gl.glBindVertexArray(0)
@@ -225,12 +108,6 @@ function effect_chain.exitGL()
     for _,f in pairs(filters) do
         f:exitGL()
     end
-end
-
-function effect_chain.insert_effect(shader, index)
-end
-
-function effect_chain.remove_effect(index)
 end
 
 function effect_chain.resize_fbo(w,h)
