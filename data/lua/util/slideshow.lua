@@ -1,8 +1,10 @@
 --[[ slideshow.lua
 
+    A framework for a powerpoint-style slide: Title, list of
+    bullet points that reveal one-by-one, and a copyright notice.
+    Contains font rendering module and state.
 ]]
 
-local glfont = nil -- Will hold our class instance
 require("util.glfont")
 local mm = require("util.matrixmath")
 local ffi = require("ffi")
@@ -36,6 +38,12 @@ function Slideshow:init(strings)
     if strings.bullets then
         self.bullet_points = strings.bullets
     end
+
+    if strings.shown_lines then
+        self.shown_lines = strings.shown_lines
+    end
+
+    self.codesnippet = strings.codesnippet
 
     self.copyright = "(c) Jim Susinno 2016"
 end
@@ -83,7 +91,7 @@ function Slideshow:draw_text()
     local s = .68
     mm.glh_scale(m, s,s,s)
     local lineh = 170
-    mm.glh_translate(m, 270, 60 + lineh, 0)
+    mm.glh_translate(m, 200, 60 + lineh, 0)
 
     for i=1,self.shown_lines do
         if bullet_points[i] then
@@ -110,6 +118,7 @@ end
 
 function Slideshow:keypressed(ch)
     local func_table = {
+        -- 262-265 are arrow keys in glfw
         [262] = function (x) self:advance(1) end,
         [263] = function (x) self:advance(-1) end,
         [264] = function (x) end,

@@ -15,6 +15,7 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
+    "scene.postprocessingslides_scene",
     "scene.colorcube",
     "scene.fbo_scene",
     "scene.cubemap_scene",

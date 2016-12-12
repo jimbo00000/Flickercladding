@@ -2,6 +2,9 @@
 
     A scene that contains its own fbo, performing its own
     render pass so it can display the output in itself.
+
+    This scene is almost a strange loop; prepare for things to
+    get a little weird.
 ]]
 fbo_scene = {}
 
@@ -161,6 +164,8 @@ function render_scene(view, proj)
 end
 
 -- Render to the internal buffer owned by this scene
+-- View is determined by the scene's "internal camera" and
+-- is set by the caller, render_for_one_eye.
 function render_pre_pass(view, proj)
     -- Save viewport dimensions
     local vp = ffi.new("GLuint[4]", 0,0,0,0)
@@ -169,7 +174,7 @@ function render_pre_pass(view, proj)
     local boundfbo = ffi.new("int[1]")
     gl.glGetIntegerv(GL.GL_FRAMEBUFFER_BINDING, boundfbo)
 
-    -- Draw quad scene to this scene's internal fbo
+    -- Draw quad scene to this scene's first internal fbo
     if PostFX then PostFX.bind_fbo() end
     gl.glEnable(GL.GL_DEPTH_TEST)
     render_scene(view, proj)
@@ -225,18 +230,7 @@ function render_scene_in_space(view, proj)
     local m = {}
     for i=1,16 do m[i] = view[i] end
 
---[[
-    -- External camera transform; move the whole scene
-    -- back a bit and turn.
-    local txfm = {}
-    mm.make_identity_matrix(txfm)
-    mm.glh_translate(txfm, 1,0,-2)
-    mm.glh_rotate(txfm, 60, 0,1,0)
-    mm.pre_multiply(m, txfm)
-    ]]
-
-
-    -- Render the first fbo quad in space behind the view frustum
+    -- Render a stack of fbo quads in space behind the view frustum
     local q = {}
     for i=1,16 do q[i] = m[i] end
     local s = 3.5
@@ -258,8 +252,9 @@ function render_scene_in_space(view, proj)
     frustum.render_for_one_eye(m, proj)
 end
 
--- Draw each fbo quad in the filter chain as a HUD
--- in screen space.
+-- Draw each fbo quad in the filter chain as a HUD in screen space.
+-- Try to fit them in sort of neatly, but perfection is out of scope here
+-- without developing a whole GUI system.
 function render_hud(view, proj)
     gl.glDisable(GL.GL_DEPTH_TEST)
 
@@ -280,14 +275,24 @@ function render_hud(view, proj)
     gl.glEnable(GL.GL_DEPTH_TEST)
 end
 
+-- The normal entry point where we draw the scene in space
+-- with an extra preceding step
 function fbo_scene.render_for_one_eye(view, proj)
     -- Fixed camera view for the scene within a scene
     local cam = {}
     mm.make_identity_matrix(cam)
     mm.glh_translate(cam, 0,0,-1)
-    render_pre_pass(view, proj)
+    render_pre_pass(cam, proj)
 
-    -- Regular camera controls for the view of the scene within a scene
+    -- Here is a view of the scene within a scene:
+    -- External camera transform; move the whole scene
+    -- back a bit and turn.
+    local txfm = {}
+    mm.make_identity_matrix(txfm)
+    mm.glh_rotate(txfm, 60, 0,1,0)
+    mm.glh_translate(txfm, 1,0,-2)
+    mm.post_multiply(view, txfm)
+    
     render_scene_in_space(view, proj)
 
     -- TODO: draw these first with depth written out as topmost
@@ -299,6 +304,11 @@ function fbo_scene.timestep(absTime, dt)
     if PostFX and PostFX.timestep then PostFX.timestep(absTime, dt) end
 end
 
+--
+-- This section below is almost a straight copy of what's in main.
+-- Could we factor this out into a module? Then things could get
+-- really weird...
+--
 local scene_names = {
     "scene.hybrid_scene",
     "scene.colorcube",
@@ -318,7 +328,6 @@ function fbo_scene.keypressed(key)
 
     -- 290 == F1 in glfw
     PostFX.remove_effect_at_index(key - 290 + 1)
-    --print(key)
 
     -- 70 == 'f' in glfw
     local filter_names = {
