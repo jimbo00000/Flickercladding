@@ -131,14 +131,14 @@ function on_lua_initgl(pLoaderFunc)
         ANDROID = true -- an assumption
     else
         --[[
-            Now, the GL function loading businesScene...
+            Now, the GL function loading business...
             Everything in GL 1.2 or older has names in OpenGL32.dll/opengl32.dll (Windows),
             while pointers to all newer functions must be obtained from a loader function.
             Using the wglGetProcAddress provided by that dll will return NULL pointers for
-            all the old functionScene. Using glfwGetProcAddress takes care of both cases, but
+            all the old functions. Using glfwGetProcAddress takes care of both cases, but
             pulling it in via the ffi would be a redundant copy of GLFW, and would require
             an init of the second GLFW, which it might not even do. Instead, just pass the
-            pointer to to C++ app's GLFW's glfwGetProcAddresScene.
+            pointer to to C++ app's GLFW's glfwGetProcAddress.
 
             https://www.opengl.org/wiki/Load_OpenGL_Functions
             https://www.opengl.org/wiki/Talk%3aPlatform_specifics%3a_Windows
