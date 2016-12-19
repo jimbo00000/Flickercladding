@@ -15,7 +15,21 @@ local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
 local scene_modules = {
-    "scene.postprocessingslides_scene",
+    "scene2.clockface",
+    "scene2.colorcube",
+    "scene2.font_test",
+    "scene2.eyetest",
+    "scene2.julia_set",
+    "scene2.hybrid_scene",
+    "scene2.cubemap",
+    "scene2.moon",
+    "scene2.nbody07",
+    "scene2.multipass_example",
+    "scene2.molecule",
+    "scene2.simple_game",
+
+--[[
+   "scene.postprocessingslides_scene",
     "scene.colorcube",
     "scene.fbo_scene",
     "scene.cubemap_scene",
@@ -35,6 +49,7 @@ local scene_modules = {
     --"scene.floorquad",
     "scene.touchtris",
     "scene.touch_shader",
+	]]
 }
 local scene_module_idx = 1
 function switch_scene(reverse)
@@ -49,15 +64,15 @@ function switch_scene(reverse)
 end
 
 function switch_to_scene(name)
-    print("switch_to_scene", name)
     if s and Scene.exitGL then
-        Scene.exitGL()
+        Scene:exitGL()
     end
     package.loaded[name] = nil
     Scene = nil
 
     if not Scene then
-        Scene = require(name)
+        SceneLibrary = require(name)
+        Scene = SceneLibrary.new()
         if Scene then
             local now = os.clock()
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
@@ -67,12 +82,14 @@ function switch_to_scene(name)
             else
                 dir = "../data/lua"
             end
-            if Scene.setDataDirectory then Scene.setDataDirectory(dir) end
-            if Scene.setWindowSize then Scene.setWindowSize(win_w, win_h) end
-            Scene.initGL()
+            if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
+            if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
+            Scene:initGL()
             local initTime = os.clock() - now
-            print(name.." initGL: "..math.floor(1000*initTime).."ms")
             lastSceneChangeTime = now
+            print(name,
+                "init time: "..math.floor(1000*initTime).." ms",
+                "memory: "..math.floor(collectgarbage("count")).." kB")
         end
     end
 end
@@ -118,8 +135,8 @@ end
 function on_lua_draw(pmv, ppr)
     local mv = array_to_table(pmv)
     local pr = array_to_table(ppr)
-    Scene.render_for_one_eye(mv, pr)
-    if Scene.set_origin_matrix then Scene.set_origin_matrix(mv) end
+    Scene:render_for_one_eye(mv, pr)
+    if Scene.set_origin_matrix then Scene:set_origin_matrix(mv) end
     display_scene_overlay()
 end
 
@@ -177,12 +194,12 @@ function on_lua_initgl(pLoaderFunc)
 end
 
 function on_lua_exitgl()
-    Scene.exitGL()
+    Scene:exitGL()
     glfont:exitGL()
 end
 
 function on_lua_timestep(absTime, dt)
-    Scene.timestep(absTime, dt)
+    if Scene.timestep then Scene:timestep(absTime, dt) end
 end
 
 local action_types = {
@@ -200,7 +217,7 @@ local switched_flag = false
 
 function on_lua_singletouch(pointerid, action, x, y)
     --print("on_lua_singletouch", pointerid, action, x, y)
-    if Scene.onSingleTouch then Scene.onSingleTouch(pointerid, action, x, y) end
+    if Scene.onSingleTouch then Scene:onSingleTouch(pointerid, action, x, y) end
 
     pointers[pointerid] = {x=x/win_w, y=y/win_h}
 
@@ -261,18 +278,18 @@ function on_lua_keypressed(key, scancode, action, mods)
 
     if action == 1 then
         if Scene.keypressed then
-            local consumed = Scene.keypressed(key, scancode, action, mods)
+            local consumed = Scene:keypressed(key, scancode, action, mods)
             if consumed then return end
         end
 
         if Scene.charkeypressed then
-            Scene.charkeypressed(string.char(scancode))
+            Scene:charkeypressed(string.char(scancode))
         end
     end
 end
 
 function on_lua_accelerometer(x,y,z,accuracy)
-    if Scene.accelerometer then Scene.accelerometer(x,y,z,accuracy) end
+    if Scene.accelerometer then Scene:accelerometer(x,y,z,accuracy) end
 end
 
 function on_lua_setTimeScale(t)
@@ -280,7 +297,7 @@ end
 
 function on_lua_setwindowsize(w, h)
     win_w,win_h = w,h
-    if Scene.setWindowSize then Scene.setWindowSize(w, h) end
+    if Scene.setWindowSize then Scene:setWindowSize(w, h) end
 end
 
 function on_lua_changescene(d)
