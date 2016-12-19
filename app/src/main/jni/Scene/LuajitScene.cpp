@@ -3,6 +3,7 @@
 #include "LuajitScene.h"
 #include "DataDirectoryLocation.h"
 #include "Logging.h"
+#include <sstream>
 
 #ifdef USE_SIXENSE
 #include <sixense.h>
@@ -40,16 +41,18 @@ void LuajitScene::exitLua()
 static int l_my_print(lua_State* L) {
     int nargs = lua_gettop(L);
 
+    std::ostringstream oss;
     for (int i=1; i <= nargs; i++) {
         if (lua_isstring(L, i)) {
             /* Pop the next arg using lua_tostring(L, i) and do your print */
             const char* pStr = lua_tostring(L, i);
-            LOG_INFO("LuaJIT> %s", pStr);
+            oss << pStr << "\t";
         }
         else {
             /* Do something with non-strings if you like */
         }
     }
+    LOG_INFO("LuaJIT> %s", oss.str().c_str());
 
     return 0;
 }
