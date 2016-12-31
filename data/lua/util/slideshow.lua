@@ -44,6 +44,7 @@ function Slideshow:init(strings)
     end
 
     self.codesnippet = strings.codesnippet
+    self.background = strings.background
 
     self.copyright = "(c) Jim Susinno 2016"
 end
@@ -91,7 +92,7 @@ function Slideshow:draw_text()
     local s = .68
     mm.glh_scale(m, s,s,s)
     local lineh = 170
-    mm.glh_translate(m, 200, 60 + lineh, 0)
+    mm.glh_translate(m, 200, lineh, 0)
 
     for i=1,self.shown_lines do
         if bullet_points[i] then

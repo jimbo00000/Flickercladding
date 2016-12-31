@@ -22,10 +22,15 @@ local glFloatv   = ffi.typeof('GLfloat[?]')
 local glConstCharpp = ffi.typeof('const GLchar *[1]')
 
 function load_and_compile_shader_source(src, type)
-    -- Version replacement for MacOS X's inadequate GL support
+    -- Version replacement for various GL implementations 
     if ffi.os == "OSX" then
+        -- MacOS X's inadequate GL support
         src = string.gsub(src, "#version 300 es", "#version 410")
         src = string.gsub(src, "#version 310 es", "#version 410")
+    elseif string.match(ffi.string(gl.glGetString(GL.GL_VENDOR)), "ATI") then
+        -- AMD's strict standard compliance
+        src = string.gsub(src, "#version 300 es", "#version 430")
+        src = string.gsub(src, "#version 310 es", "#version 430")
     end
     
     local sourcep = glCharv(#src + 1)

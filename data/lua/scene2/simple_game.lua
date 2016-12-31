@@ -32,6 +32,10 @@ function simple_game:init()
     self.last_controllerstate = nil
 end
 
+function simple_game:setDataDirectory(dir)
+    self.dataDir = dir
+end
+
 --local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
@@ -45,8 +49,6 @@ local function prequire(m)
   return err
 end
 
--- TODO: set package.path to get this dll from somewhere in the project dir tree
---package.path = package.path..'../?.dll;'
 local bass = prequire("bass")
 if bass == nil then
     print("Could not load Bass library.")
@@ -164,8 +166,9 @@ function simple_game:initGL()
     -- Initialize audio library - BASS
     if bass then
         local init_ret = bass.BASS_Init(-1, 44100, 0, 0, nil)
-        -- TODO: relative path to keep sounds
-        self.sample = bass.BASS_SampleLoad(false, "../lua/Blip5.wav", 0, 0, 16, 0)
+        local sndfilename = "Blip5.wav"
+        if self.dataDir then sndfilename = self.dataDir .. "/" .. sndfilename end
+        self.sample = bass.BASS_SampleLoad(false, sndfilename, 0, 0, 16, 0)
         bass.BASS_Start()
         self.channel = bass.BASS_SampleGetChannel(self.sample, false)
     end

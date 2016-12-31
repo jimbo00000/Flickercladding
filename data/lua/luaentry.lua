@@ -19,6 +19,7 @@ local lastSceneChangeTime = 0
 
 local scene_modules = {
     "scene2.clockface",
+    "scene2.droid",
     "scene2.colorcube",
     "scene2.font_test",
     "scene2.eyetest",

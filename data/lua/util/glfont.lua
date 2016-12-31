@@ -39,7 +39,6 @@ function GLFont:init(fontfile, imagefile)
     self.prog = 0
     self.tex = 0
     self.vbos = {}
-    self.texs = {}
     self.string_vbo_table = {}
     self.dataDir = nil
 end
@@ -127,7 +126,6 @@ function GLFont:initGL()
         gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
         gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, format, self.tex_w, self.tex_h, 0, format, GL.GL_UNSIGNED_BYTE, pixels)
         gl.glBindTexture(GL.GL_TEXTURE_2D, 0)
-        table.insert(self.texs, texId)
     end
 end
 
@@ -135,21 +133,23 @@ function GLFont:exitGL()
     for k,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
     end
-    for k,v in pairs(self.texs) do
-        gl.glDeleteTextures(1,v)
-    end
-    self.vbos = {}
-    self.texs = {}
-    gl.glDeleteProgram(self.prog)
 
-    local vaoId = ffi.new("GLuint[1]", self.vao)
-    gl.glDeleteVertexArrays(1, vaoId)
+    local texdel = ffi.new("GLuint[1]", self.tex)
+    gl.glDeleteTextures(1,texdel)
+
+    self.vbos = {}
+    gl.glDeleteProgram(self.prog)
 
     for k,v in pairs(self.string_vbo_table) do
         local vv,vt = v[1], v[2]
         gl.glDeleteBuffers(1,vv)
         gl.glDeleteBuffers(1,vt)
     end
+
+    local vaoId = ffi.new("GLuint[1]", self.vao)
+    gl.glDeleteVertexArrays(1, vaoId)
+    gl.glBindVertexArray(0)
+
     self.font.chars = {}
 end
 
@@ -259,7 +259,7 @@ function GLFont:get_string_width(str)
     for i=1,#str do
         local ch = str:byte(i)
         if ch ~= nil then
-            local v, t, xa = self.font:getcharquad(ch, x, y, self.tex_w, self.tex_h)
+            local v, t, xa = self.font:getcharquad(ch, 0,0, self.tex_w, self.tex_h)
             if v and t then
                 w = w + xa
             end
