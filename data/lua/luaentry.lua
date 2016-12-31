@@ -17,20 +17,56 @@ local ANDROID = false
 local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
+local scenedir = "scene2"
+
+function switch_to_scene(name)
+    local fullname = scenedir.."."..name
+    if Scene and Scene.exitGL then
+        Scene:exitGL()
+    end
+    -- Do we need to unload the module?
+    package.loaded[fullname] = nil
+    Scene = nil
+
+    if not Scene then
+        SceneLibrary = require(fullname)
+        Scene = SceneLibrary.new()
+        if Scene then
+            local now = clock()
+            -- Instruct the scene where to load data from. Dir is relative to app's working dir.
+            local dir = ""
+            if ANDROID then
+                dir = appDir.."/lua"
+            else
+                dir = "../data/lua"
+            end
+            if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
+            if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
+            Scene:initGL()
+            local initTime = clock() - now
+            lastSceneChangeTime = now
+            collectgarbage()
+            print(name,
+                "init time: "..math.floor(1000*initTime).." ms",
+                "memory: "..math.floor(collectgarbage("count")).." kB")
+        end
+    end
+end
+
 local scene_modules = {
-    "scene2.clockface",
-    "scene2.droid",
-    "scene2.colorcube",
-    "scene2.font_test",
-    "scene2.eyetest",
-    "scene2.julia_set",
-    "scene2.hybrid_scene",
-    "scene2.cubemap",
-    "scene2.moon",
-    "scene2.nbody07",
-    "scene2.multipass_example",
-    "scene2.molecule",
-    "scene2.simple_game",
+    "clockface",
+    "droid",
+    "colorcube",
+    "font_test",
+    "eyetest",
+    "julia_set",
+    "hybrid_scene",
+    "cubemap",
+    "moon",
+    "nbody07",
+    "multipass_example",
+    "molecule",
+    "simple_game",
 
 --[[
    "scene.postprocessingslides_scene",
@@ -65,37 +101,6 @@ function switch_scene(reverse)
         if scene_module_idx > #scene_modules then scene_module_idx = 1 end
     end
     switch_to_scene(scene_modules[scene_module_idx])
-end
-
-function switch_to_scene(name)
-    if s and Scene.exitGL then
-        Scene:exitGL()
-    end
-    package.loaded[name] = nil
-    Scene = nil
-
-    if not Scene then
-        SceneLibrary = require(name)
-        Scene = SceneLibrary.new()
-        if Scene then
-            local now = clock()
-            -- Instruct the scene where to load data from. Dir is relative to app's working dir.
-            local dir = ""
-            if ANDROID then
-                dir = appDir.."/lua"
-            else
-                dir = "../data/lua"
-            end
-            if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
-            if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
-            Scene:initGL()
-            local initTime = clock() - now
-            lastSceneChangeTime = now
-            print(name,
-                "init time: "..math.floor(1000*initTime).." ms",
-                "memory: "..math.floor(collectgarbage("count")).." kB")
-        end
-    end
 end
 
 local function display_scene_overlay()
