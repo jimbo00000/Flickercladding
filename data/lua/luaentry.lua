@@ -5,6 +5,9 @@ package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.pa
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
+
+local clock = os.clock
+
 local Scene = nil
 require("util.glfont")
 local mm = require("util.matrixmath")
@@ -74,7 +77,7 @@ function switch_to_scene(name)
         SceneLibrary = require(name)
         Scene = SceneLibrary.new()
         if Scene then
-            local now = os.clock()
+            local now = clock()
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             local dir = ""
             if ANDROID then
@@ -85,7 +88,7 @@ function switch_to_scene(name)
             if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
             if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
             Scene:initGL()
-            local initTime = os.clock() - now
+            local initTime = clock() - now
             lastSceneChangeTime = now
             print(name,
                 "init time: "..math.floor(1000*initTime).." ms",
@@ -98,7 +101,7 @@ local function display_scene_overlay()
     if not glfont then return end
 
     local showTime = 2
-    local age = os.clock() - lastSceneChangeTime
+    local age = clock() - lastSceneChangeTime
     -- TODO a nice fade or something
     if age > showTime then return end
 
