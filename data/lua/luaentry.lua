@@ -1,7 +1,6 @@
 -- luaentry.lua
 local appDir = "/sdcard/Android/data/com.android.flickercladding"
-package.path = appDir.."/lua/?.lua;../data/lua/?.lua;" .. "?.lua;" .. package.path
---package.path = "../data/lua/;" .. package.path
+package.path = appDir..";../data/lua/?.lua;" .. package.path
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
