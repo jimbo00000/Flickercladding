@@ -30,7 +30,7 @@ local glUintv  = ffi.typeof('GLuint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
 
 local basic_vert = [[
-#version 330
+#version 310 es
 
 in vec4 vPosition;
 in vec4 vColor;
@@ -48,7 +48,12 @@ void main()
 ]]
 
 local basic_frag = [[
-#version 330
+#version 310 es
+
+#ifdef GL_ES
+precision mediump float;
+precision mediump int;
+#endif
 
 in vec3 vfColor;
 out vec4 fragColor;
