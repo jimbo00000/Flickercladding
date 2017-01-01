@@ -54,6 +54,7 @@ function switch_to_scene(name)
 end
 
 local scene_modules = {
+    "simple_game",
     "clockface",
     "droid",
     "colorcube",
@@ -66,7 +67,6 @@ local scene_modules = {
     "nbody07",
     "multipass_example",
     "molecule",
-    "simple_game",
 
 --[[
    "scene.postprocessingslides_scene",

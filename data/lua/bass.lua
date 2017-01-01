@@ -2,7 +2,7 @@ local ffi  = require( "ffi" )
 local libs = ffi_Bass_libs or {
    OSX     = { x86 = "libbass.dylib",       x64 = "libbass.dylib" },
    Windows = { x86 = "bass.dll", x64 = "" },
-   Linux   = { x86 = "libbass.so",    x64 = "libbass.so", arm = ""  },
+   Linux   = { x86 = "libbass.so",    x64 = "libbass.so", arm = "libbass.so"  },
    BSD     = { },
    POSIX   = { },
    Other   = { }, 
