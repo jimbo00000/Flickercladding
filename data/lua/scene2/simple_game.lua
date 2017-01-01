@@ -49,9 +49,9 @@ local function prequire(m)
   return err
 end
 
-local bass = prequire("bass")
+local bass, err = prequire("bass")
 if bass == nil then
-    print("Could not load Bass library.")
+    print("Could not load Bass library: "..err)
 end
 
 local glIntv   = ffi.typeof('GLint[?]')
