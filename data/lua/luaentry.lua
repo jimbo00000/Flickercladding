@@ -1,4 +1,6 @@
 -- luaentry.lua
+print(jit.version, jit.os, jit.arch)
+
 local appDir = "/sdcard/Android/data/com.android.flickercladding"
 package.path = appDir.."/lua/?.lua;" .. package.path
 package.path = "../data/lua/?.lua;" .. package.path
