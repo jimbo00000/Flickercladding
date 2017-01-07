@@ -3,7 +3,7 @@ print(jit.version, jit.os, jit.arch)
 
 local appDir = "/sdcard/Android/data/com.android.flickercladding"
 package.path = appDir.."/lua/?.lua;" .. package.path
-package.path = "../data/lua/?.lua;" .. package.path
+package.path = "../deploy/lua/?.lua;" .. package.path
 
 local ffi = require("ffi")
 local openGL -- @todo select GL or GLES header
@@ -40,7 +40,7 @@ function switch_to_scene(name)
             if ANDROID then
                 dir = appDir.."/lua"
             else
-                dir = "../data/lua"
+                dir = "../deploy/lua"
             end
             if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
             if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
@@ -191,7 +191,7 @@ function on_lua_initgl(pLoaderFunc)
     if ANDROID then
         dir = appDir.."/lua"
     else
-        dir = "../data/lua"
+        dir = "../deploy/lua"
     end
     dir = dir .. "/fonts"
     glfont = GLFont.new('segoe_ui128.fnt', 'segoe_ui128_0.raw')

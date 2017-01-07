@@ -7,7 +7,7 @@ MESSAGE( "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}" )
 INCLUDE(cmake_modules/InvokePython.cmake)
 INVOKEPYTHON( "tools/hardcode_shaders.py" )
 
-ADD_DEFINITIONS(-DAPP_DATA_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/data/")
+ADD_DEFINITIONS(-DAPP_DATA_DIRECTORY="${CMAKE_CURRENT_SOURCE_DIR}/deploy/")
 
 # Remember to do git submodule update
 SET( LUAJIT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/LuaJIT" )
@@ -153,7 +153,7 @@ ELSEIF( UNIX )
     include_directories( ${OPENGL_INCLUDE_DIRS} )
 
     SET( PLATFORM_LIBS
-        
+
         -lGL
         -lGLU
         ${FRAMEWORK_LIBS}
