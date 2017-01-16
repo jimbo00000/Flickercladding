@@ -2,19 +2,19 @@
 
     Generate some simple geometry procedurally.
 ]]
-disc = {}
+droid = {}
 
-disc.__index = disc
+droid.__index = droid
 
-function disc.new(...)
-    local self = setmetatable({}, disc)
+function droid.new(...)
+    local self = setmetatable({}, droid)
     if self.init ~= nil and type(self.init) == "function" then
         self:init(...)
     end 
     return self
 end
 
-function disc:init()
+function droid:init()
     self.vbos = {}
     self.vao = 0
     self.prog = 0
@@ -65,7 +65,7 @@ void main()
 }
 ]]
 
-function get_geometry()
+local function get_geometry()
     local slices, stacks = 16,32
     local bodyLen = 1.5
     local sc = 0.2
@@ -124,18 +124,20 @@ function get_geometry()
         {Geom_Lib.generate_capped_cylinder(slices, stacks, bodyLen)},
     }
 
-    local v,t,f = Geom_Lib.combine_meshes(meshes)
+    local v,n,t,f = Geom_Lib.combine_meshes(meshes)
     -- Swap y and z
     local num = #v/3
     for i=1,num do
         v[3*i-1],v[3*i-0] = -v[3*i-0],v[3*i-1]
+        n[3*i-1],n[3*i-0] = -n[3*i-0],n[3*i-1]
     end
-    return v,t,f
+    return v,n,t,f
 end
 
-function disc:init_attributes()
-    local v,t,f = get_geometry()
+function droid:init_attributes()
+    local v,n,t,f = get_geometry()
     local verts = glFloatv(#v, v)
+    local norms = glFloatv(#n, n)
     local texs = glFloatv(#t, t)
     local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
     local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
@@ -150,8 +152,8 @@ function disc:init_attributes()
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
-    gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(texs), texs, GL.GL_STATIC_DRAW)
-    gl.glVertexAttribPointer(vcol_loc, 2, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
+    gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(norms), norms, GL.GL_STATIC_DRAW)
+    gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
     table.insert(self.vbos, cvbo)
 
     gl.glEnableVertexAttribArray(vpos_loc)
@@ -166,7 +168,7 @@ function disc:init_attributes()
     table.insert(self.vbos, qvbo)
 end
 
-function disc:initGL()
+function droid:initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
     self.vao = vaoId[0]
@@ -181,7 +183,7 @@ function disc:initGL()
     gl.glBindVertexArray(0)
 end
 
-function disc:exitGL()
+function droid:exitGL()
     gl.glBindVertexArray(self.vao)
     for _,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
@@ -193,7 +195,7 @@ function disc:exitGL()
     gl.glBindVertexArray(0)
 end
 
-function disc:render_for_one_eye(view, proj)
+function droid:render_for_one_eye(view, proj)
     gl.glUseProgram(self.prog)
     --gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
     --gl.glEnable(GL.GL_CULL_FACE)
@@ -207,4 +209,4 @@ function disc:render_for_one_eye(view, proj)
     gl.glUseProgram(0)
 end
 
-return disc
+return droid

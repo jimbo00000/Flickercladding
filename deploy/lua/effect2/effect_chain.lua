@@ -18,11 +18,33 @@ function effect_chain.new(...)
     return self
 end
 
-function effect_chain:init()
+function effect_chain:init(params)
     self.vbos = {}
     self.vao = 0
     self.time = 0
     self.filters = {}
+
+    -- Default filter selection
+    self.filter_names = {
+
+        "sidebyside_double",
+        "lenswarp",
+        "beamrace",
+
+    --[[
+        "invert",
+        "hueshift",
+        "wiggle",
+        "wobble",
+        "convolve",
+        "scanline",]]
+        "passthrough",
+    }
+
+    if not params then return end
+    if params.filter_names then
+        self.filter_names = params.filter_names
+    end
 end
 
 --local openGL = require("opengl")
@@ -38,7 +60,19 @@ require("util.filter")
 
 function effect_chain:insert_effect_by_name(name,w,h)
     if not name then return end
-    local filt = Filter.new{name=name, source=spf[name]}
+
+    local params = {}
+    -- Recognize the filter name 'downsample' and manually add in
+    -- a smaller texture downsampling stage.
+    if name:sub(0,10) == "downsample" then
+        local factor = 4
+        name = "passthrough"
+        params.sample_factor = 1/factor
+    end
+    params.name = name
+    params.source = spf[name]
+
+    local filt = Filter.new(params)
     filt:initGL()
 
     -- Get w,h from the first fbo in the list if not specified.
@@ -74,16 +108,6 @@ function effect_chain:get_filters()
     return self.filters
 end
 
-local filter_names = {
-    "invert",
-    "hueshift",
-    "wiggle",
-    "wobble",
-    "convolve",
-    "scanline",
-    "passthrough",
-}
-
 function effect_chain:make_quad_vbos()
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
@@ -108,7 +132,7 @@ function effect_chain:initGL(w,h)
     self:make_quad_vbos()
 
     --table.insert(filters, Filter.new({name="Downsample",source=spf["passthrough"],sample_factor=1/4}))
-    for _,n in pairs(filter_names) do
+    for _,n in pairs(self.filter_names) do
         self:insert_effect_by_name(n,w,h)
     end
 
