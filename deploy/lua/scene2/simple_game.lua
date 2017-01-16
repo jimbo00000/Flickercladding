@@ -7,13 +7,15 @@
 ]]
 simple_game = {}
 
+local snd = require("util.soundfx")
+
 simple_game.__index = simple_game
 
 function simple_game.new(...)
     local self = setmetatable({}, simple_game)
     if self.init ~= nil and type(self.init) == "function" then
         self:init(...)
-    end 
+    end
     return self
 end
 
@@ -41,18 +43,6 @@ local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
 local OriginLibrary = require("scene2.origin")
-
--- http://stackoverflow.com/questions/17877224/how-to-prevent-a-lua-script-from-failing-when-a-require-fails-to-find-the-scri
-local function prequire(m) 
-  local ok, err = pcall(require, m) 
-  if not ok then return nil, err end
-  return err
-end
-
-local bass, err = prequire("bass")
-if bass == nil then
-    print("Could not load Bass library: "..err)
-end
 
 local glIntv   = ffi.typeof('GLint[?]')
 local glUintv  = ffi.typeof('GLuint[?]')
@@ -168,16 +158,6 @@ function simple_game:initGL()
         end
     end
 
-    -- Initialize audio library - BASS
-    if bass then
-        local init_ret = bass.BASS_Init(-1, 44100, 0, 0, nil)
-        local sndfilename = "Blip5.wav"
-        if self.dataDir then sndfilename = self.dataDir .. "/" .. sndfilename end
-        self.sample = bass.BASS_SampleLoad(false, sndfilename, 0, 0, 16, 0)
-        bass.BASS_Start()
-        self.channel = bass.BASS_SampleGetChannel(self.sample, false)
-    end
-
     self.origin = OriginLibrary.new()
     self.origin:initGL()
 end
@@ -206,7 +186,7 @@ function simple_game:render_for_one_eye(mview, proj)
     local upr_loc = gl.glGetUniformLocation(self.prog, "prmtx")
     gl.glUseProgram(self.prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
-    
+
     -- draw shots
     for _,s in pairs(self.shots) do
         local m = {}
@@ -285,6 +265,8 @@ function simple_game:shoot(mtx)
 
     shot = {p=pos, v=vel, r=.1, age=0}
     table.insert(self.shots, shot)
+
+    snd.playSound("Blip5.wav")
 end
 
 function simple_game:set_origin_matrix(m)
@@ -295,10 +277,6 @@ function simple_game:set_origin_matrix(m)
 end
 
 function simple_game:keypressed(key)
-    if bass then
-        bass.BASS_ChannelPlay(self.channel, false)
-    end
-
     self:shoot(self.origin_matrix)
 end
 
@@ -343,10 +321,6 @@ function simple_game:onSingleTouch(pointerid, action, x, y)
     local actionflag = action % 255
     local a = action_types[actionflag]
     if a == "Down" or a == "PointerDown" then
-        if bass then
-            bass.BASS_ChannelPlay(self.channel, false)
-        end
-
         self:shoot(self.origin_matrix)
     end
 end

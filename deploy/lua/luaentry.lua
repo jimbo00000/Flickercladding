@@ -38,9 +38,9 @@ function switch_to_scene(name)
             -- Instruct the scene where to load data from. Dir is relative to app's working dir.
             local dir = ""
             if ANDROID then
-                dir = appDir.."/lua"
+                dir = appDir.."/data"
             else
-                dir = "../deploy/lua"
+                dir = "../deploy/data"
             end
             if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
             if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end

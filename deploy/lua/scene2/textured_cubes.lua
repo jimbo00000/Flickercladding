@@ -19,7 +19,7 @@ function textured_cubes.new(...)
     local self = setmetatable({}, textured_cubes)
     if self.init ~= nil and type(self.init) == "function" then
         self:init(...)
-    end 
+    end
     return self
 end
 
@@ -90,7 +90,7 @@ end
 
 function textured_cubes:loadtextures()
     local texfilename = "stone_128x128.raw"
-    if self.dataDir then texfilename = self.dataDir .. "/" .. texfilename end
+    if self.dataDir then texfilename = self.dataDir .. "/images/" .. texfilename end
     local w,h = 128,128
     local inp = io.open(texfilename, "rb")
     local data = nil
@@ -238,7 +238,7 @@ function textured_cubes:render_for_one_eye(view, proj)
     gl.glBindTexture(GL.GL_TEXTURE_2D, self.texID)
     local stex_loc = gl.glGetUniformLocation(self.prog, "sTex")
     gl.glUniform1i(stex_loc, 0)
-    
+
     -- A grid of cubes arranged on the xz plane
     local s = 2
     for j=-s,s do

@@ -13,7 +13,7 @@ function cubemap.new(...)
     local self = setmetatable({}, cubemap)
     if self.init ~= nil and type(self.init) == "function" then
         self:init(...)
-    end 
+    end
     return self
 end
 
@@ -93,7 +93,7 @@ function cubemap:loadtextures()
     local dim = 128
     for i,name in ipairs(texfilenames) do
         local fn = name..dim..".raw"
-        if self.dataDir then fn = self.dataDir .. "/" .. fn end
+        if self.dataDir then fn = self.dataDir .. "/images/" .. fn end
         local w,h = dim,dim
         local inp = assert(io.open(fn, "rb"))
         local data = inp:read("*all")
