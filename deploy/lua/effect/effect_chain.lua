@@ -50,6 +50,13 @@ function effect_chain.remove_effect_at_index(index)
     table.remove(filters, index)
 end
 
+function effect_chain.remove_all_effects(index)
+    local num = #filters
+    for i=1,num do
+        effect_chain.remove_effect_at_index(1)
+    end
+end
+
 -- For accessing filter list outside of module
 function effect_chain.get_filters()
     return filters

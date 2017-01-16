@@ -144,6 +144,119 @@ single_pass_filters = {
         fragColor = vec4(hsv2rgb(hsv), 1.);
     }
     ]],
+
+    -- Give a graphical indication  of what scanout looks like.
+    ["beamrace"] = [[
+    #line 150
+    uniform int ResolutionX;
+    uniform int ResolutionY;
+    uniform float time;
+
+    float fps = 1.;
+    float persistence = .20; // duty cycle
+
+    float sawTooth(float a, float b, float x)
+    {
+        return clamp(((fract(a*(x-time))-(1.-b))/b),0.,1.);
+
+        float attack = step(.2,fract(x-a));//1.-step(a, x);
+        float decay = b*((x-a))+1.;
+        return clamp(attack*decay, 0., 1.);
+    }
+
+    float getBrightnessAtPixel(vec2 uv, float spf, float pers)
+    {
+        uv = uv.yx;
+        float t = mod(time, spf) / spf; //[0,1]
+
+        float secondsPerLine = spf / float(ResolutionY);
+        float u = mod(time, secondsPerLine) / secondsPerLine;
+
+        ///@todo X
+        float colScaleX = 1.0;//clamp(  1.0 - .1*float(ResolutionX)*abs(uv.x-u)  ,0.,1.);
+        float colScaleY = clamp(  1.0 - .1*float(ResolutionY)*abs(uv.y-t)  ,0.,1.);
+
+        colScaleY = sawTooth(fps, pers, uv.y);
+
+        return colScaleX * colScaleY;
+    }
+
+    void main()
+    {
+        fragColor = getBrightnessAtPixel(uv, 1./fps, persistence) *
+            texture(tex, uv);
+    }
+    ]],
+
+
+    -- From the early Oculus VR SDK
+    ["lenswarp"] = [[
+    vec2 LensCenter;
+    vec2 ScreenCenter;
+    vec2 Scale;
+    vec2 ScaleIn;
+    vec4 HmdWarpParam;
+
+    vec2 HmdWarp(vec2 in01)
+    {
+        vec2  theta = (in01 - LensCenter) * ScaleIn; // Scales to [-1, 1]
+        float rSq = theta.x * theta.x + theta.y * theta.y;
+        vec2  theta1 = theta * (HmdWarpParam.x + HmdWarpParam.y * rSq +
+                                HmdWarpParam.z * rSq * rSq + HmdWarpParam.w * rSq * rSq * rSq);
+        return LensCenter + Scale * theta1;
+    }
+     
+    void main()
+    {
+        float lensOff = 0.287994 - 0.25;
+
+        // Left eye
+        LensCenter = vec2(0.25 + lensOff, 0.5);
+        ScreenCenter = vec2(.25, .5);
+        if (uv.x > .5)
+        {
+            LensCenter = vec2(0.75 + lensOff, 0.5);
+            ScreenCenter = vec2(.75, .5);
+        }
+
+        Scale = vec2(0.145806,  0.233290);
+        ScaleIn = vec2(4.0, 2.5);
+        HmdWarpParam = vec4(1.0, 0.5, 0.25, 0.0);
+
+        vec2 tc = HmdWarp(uv);
+        if (!all(equal(clamp(tc, ScreenCenter-vec2(0.25,0.5), ScreenCenter+vec2(0.25,0.5)), tc)))
+            fragColor = vec4(0);
+        else
+            fragColor = texture(tex, tc);
+    }
+    ]],
+
+    ["sidebyside_double"] = [[
+    void main()
+    {
+        vec2 tc = uv;
+        tc.x = fract(2.*tc.x);
+        fragColor = texture(tex, tc);
+    }
+    ]],
+
+    -- http://www.geeks3d.com/20091027/shader-library-posterization-post-processing-effect-glsl/
+    ["posterize"] = [[
+    void main()
+    {
+        float gamma = 0.6;
+        float numColors = 8.0;
+
+        vec3 c = texture(tex, uv).rgb;
+        c = pow(c, vec3(gamma, gamma, gamma));
+        c = c * numColors;
+        c = floor(c);
+        c = c / numColors;
+        c = pow(c, vec3(1.0/gamma));
+        fragColor = vec4(c, 1.0);
+    }
+    ]],
+
 }
 
 return single_pass_filters
