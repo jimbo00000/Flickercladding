@@ -249,6 +249,7 @@ function simple_game:timestep(absTime, dt)
             local rsph = .73
             if dist < (rsph + s.r) then
                 table.remove(self.targets, it)
+                snd.playSound("chime_bell_ding.wav")
             end
         end
         if s.age > 10 then
