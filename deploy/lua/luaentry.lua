@@ -92,7 +92,7 @@ local scene_modules = {
     --"scene.floorquad",
     "scene.touchtris",
     "scene.touch_shader",
-	]]
+    ]]
 }
 local scene_module_idx = 1
 function switch_scene(reverse)
@@ -104,6 +104,8 @@ function switch_scene(reverse)
         if scene_module_idx > #scene_modules then scene_module_idx = 1 end
     end
     switch_to_scene(scene_modules[scene_module_idx])
+
+    snd.playSound("pop_drip.wav")
 end
 
 local function display_scene_overlay()
