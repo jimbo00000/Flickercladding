@@ -14,6 +14,7 @@ local Scene = nil
 require("util.glfont")
 local mm = require("util.matrixmath")
 local kc = require("util.glfw_keycodes")
+local snd = require("util.soundfx")
 
 local ANDROID = false
 local win_w,win_h = 800,800
@@ -189,14 +190,16 @@ function on_lua_initgl(pLoaderFunc)
     -- Instruct the scene where to load data from. Dir is relative to app's working dir.
     local dir = ""
     if ANDROID then
-        dir = appDir.."/lua"
+        dir = appDir.."/data"
     else
-        dir = "../deploy/lua"
+        dir = "../deploy/data"
     end
-    dir = dir .. "/fonts"
+
     glfont = GLFont.new('segoe_ui128.fnt', 'segoe_ui128_0.raw')
-    glfont:setDataDirectory(dir)
+    glfont:setDataDirectory(dir.."/fonts")
     glfont:initGL()
+
+    snd.setDataDirectory(dir)
 
     if fnt then
         if fnt.setDataDirectory then fnt.setDataDirectory(dir) end
