@@ -1,4 +1,4 @@
--- luaentry.lua
+-- flickercladding_scenebridge.lua
 print(jit.version, jit.os, jit.arch)
 
 local appDir = "/sdcard/Android/data/com.android.flickercladding"
