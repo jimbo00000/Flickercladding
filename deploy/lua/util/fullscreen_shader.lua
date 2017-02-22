@@ -66,7 +66,7 @@ local glIntv   = ffi.typeof('GLint[?]')
 local glUintv  = ffi.typeof('GLuint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
 
-function FullscreenShader:init_quad_attributes()
+function FullscreenShader:initQuadAttributes()
     local verts = glFloatv(4*2, {
         -1,-1,
         1,-1,
@@ -115,7 +115,7 @@ function FullscreenShader:initGL()
         fsrc = frag_header..self.fragsrc,
         })
 
-    self:init_quad_attributes()
+    self:initQuadAttributes()
     gl.glBindVertexArray(0)
 end
 

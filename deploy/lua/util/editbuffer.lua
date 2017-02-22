@@ -134,26 +134,54 @@ end
 -- Load text file into buffer
 function EditBuffer:loadfromfile(filename)
     self.lines = {}
-    if dataDir then filename = dataDir .. "/" .. filename end
     local file = io.open(filename)
     if file then
         for line in file:lines() do
             table.insert(self.lines, line)
         end
+        file:close()
     else
         print("file "..filename.." not found.")
     end
 end
 
 function EditBuffer:savetofile(filename)
-    if dataDir then filename = dataDir .. "/" .. filename end
+    --if not filename then return end
     local file = io.open(filename, "w")
     if file then
         for k,line in pairs(self.lines) do
             file:write(line)
             file:write("\n")
         end
+        file:close()
     else
         print("file "..filename.." not found.")
     end
+end
+
+-- http://lua-users.org/wiki/SplitJoin
+function split_into_lines(str)
+    local t = {}
+    local function helper(line) table.insert(t, line) return "" end
+    helper((str:gsub("(.-)\r?\n", helper)))
+    return t
+end
+
+-- Load string into buffer
+function EditBuffer:loadFromString(contents)
+    self.lines = {}
+    if not contents then return end
+    for _,line in pairs(split_into_lines(contents)) do
+        table.insert(self.lines, line)
+    end
+end
+
+function EditBuffer:saveToString()
+    local s = ''
+    local newline = '\n'
+    for k,line in pairs(self.lines) do
+        s = s..line
+        s = s..newline
+    end
+    return s
 end
