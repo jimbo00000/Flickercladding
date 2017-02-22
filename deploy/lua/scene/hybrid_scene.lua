@@ -8,39 +8,57 @@
 ]]
 hybrid_scene = {}
 
-local sts = require("scene.shadertoy_scene2")
-local cbs = require("scene.textured_cubes")
-local glfont = nil
+hybrid_scene.__index = hybrid_scene
+
+function hybrid_scene.new(...)
+    local self = setmetatable({}, hybrid_scene)
+    if self.init ~= nil and type(self.init) == "function" then
+        self:init(...)
+    end 
+    return self
+end
+
+
+local RasterLib = require("scene.textured_cubes")
+local RaymarchLib = require("scene.raymarch_csg")
 require("util.glfont")
 local mm = require("util.matrixmath")
 
-local dataDir = nil
+function hybrid_scene:init()
+    self.vbos = {}
+    self.vao = 0
+    self.prog = 0
+    self.dataDir = nil
+    self.glfont = nil
 
-function hybrid_scene.setDataDirectory(dir)
-    cbs.setDataDirectory(dir)
-    dataDir = dir
+    self.Raster = RasterLib.new()
+    self.Raymarch = RaymarchLib.new()
+end
+function hybrid_scene:setDataDirectory(dir)
+    self.Raster:setDataDirectory(dir)
+    self.dataDir = dir
 end
 
-function hybrid_scene.initGL()
-    sts.initGL()
-    cbs.initGL()
+function hybrid_scene:initGL()
+    self.Raster:initGL()
+    self.Raymarch:initGL()
 
     dir = "fonts"
-    if dataDir then dir = dataDir .. "/" .. dir end
-    glfont = GLFont.new('papyrus_512.fnt', 'papyrus_512_0.raw')
-    glfont:setDataDirectory(dir)
-    glfont:initGL()
+    if self.dataDir then dir = self.dataDir .. "/" .. dir end
+    self.glfont = GLFont.new('papyrus_512.fnt', 'papyrus_512_0.raw')
+    self.glfont:setDataDirectory(dir)
+    self.glfont:initGL()
 end
 
-function hybrid_scene.exitGL()
-    sts.exitGL()
-    cbs.exitGL()
-    glfont:exitGL()
+function hybrid_scene:exitGL()
+    self.Raster:exitGL()
+    self.Raymarch:exitGL()
+    self.glfont:exitGL()
 end
 
-function hybrid_scene.render_for_one_eye(view, proj)
-    sts.render_for_one_eye(view, proj)
-    cbs.render_for_one_eye(view, proj)
+function hybrid_scene:render_for_one_eye(view, proj)
+    self.Raster:render_for_one_eye(view, proj)
+    self.Raymarch:render_for_one_eye(view, proj)
 
     local col = {1, 1, 1}
     local m = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}
@@ -48,19 +66,14 @@ function hybrid_scene.render_for_one_eye(view, proj)
     mm.glh_translate(m, -1, .8, .5)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
-    glfont:render_string(m, proj, col, "Raymarched CSG Shape")
+    self.glfont:render_string(m, proj, col, "Raymarched CSG Shape")
 
     local m = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}
     local s = .002
     mm.glh_translate(m, 1, 0.2, -.5)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
-    glfont:render_string(m, proj, col, "Rasterized cubes")
-end
-
-function hybrid_scene.timestep(absTime, dt)
-    sts.timestep(absTime, dt)
-    cbs.timestep(absTime, dt)
+    self.glfont:render_string(m, proj, col, "Rasterized cubes")
 end
 
 return hybrid_scene

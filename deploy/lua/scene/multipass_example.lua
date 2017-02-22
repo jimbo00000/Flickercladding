@@ -30,9 +30,9 @@ end
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
 local mm = require("util.matrixmath")
-local SceneLibrary = require("scene2.hybrid_scene") -- any scene here
-local EffectLibrary = require("effect2.effect_chain")
-local FrustumLibrary = require("scene2.frustum") -- for visualization
+local SceneLibrary = require("scene.hybrid_scene") -- any scene here
+local EffectLibrary = require("effect.effect_chain")
+local FrustumLibrary = require("scene.frustum") -- for visualization
 
 local glIntv = ffi.typeof('GLint[?]')
 local glUintv = ffi.typeof('GLuint[?]')
@@ -150,7 +150,7 @@ function multipass_example:initGL()
     self.frustum = FrustumLibrary.new()
     self.frustum:initGL()
 
-    self:switch_to_scene("scene2.hybrid_scene")
+    self:switch_to_scene("scene.hybrid_scene")
 
     self.PostFX = EffectLibrary.new()
     if self.PostFX then self.PostFX:initGL(self.fw, self.fh) end
@@ -326,16 +326,16 @@ end
 -- really weird...
 --
 local scene_names = {
-    "scene2.vsfstri",
-    "scene2.clockface",
-    "scene2.colorcube",
-    "scene2.font_test",
-    "scene2.eyetest",
-    "scene2.julia_set",
-    "scene2.hybrid_scene",
-    "scene2.cubemap",
-    "scene2.moon",
-    "scene2.nbody07",
+    "scene.vsfstri",
+    "scene.clockface",
+    "scene.colorcube",
+    "scene.font_test",
+    "scene.eyetest",
+    "scene.julia_set",
+    "scene.hybrid_scene",
+    "scene.cubemap",
+    "scene.moon",
+    "scene.nbody07",
 };
 
 function multipass_example:keypressed(key)

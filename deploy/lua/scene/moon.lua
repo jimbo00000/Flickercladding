@@ -17,7 +17,7 @@ function moon.new(...)
     return self
 end
 
-local GridLib = require("scene2.gridcube")
+local GridLib = require("scene.gridcube")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
 

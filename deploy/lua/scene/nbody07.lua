@@ -7,7 +7,26 @@
 
 nbody07 = {}
 
-local openGL = require("opengl")
+nbody07.__index = nbody07
+
+function nbody07.new(...)
+    local self = setmetatable({}, nbody07)
+    if self.init ~= nil and type(self.init) == "function" then
+        self:init(...)
+    end 
+    return self
+end
+
+function nbody07:init()
+    self.vbos = {}
+    self.vao = 0
+    self.prog_display = 0
+    self.prog_accel = 0
+    self.prog_acceltiled = 0
+    self.prog_integrate = 0
+end
+
+--local openGL = require("opengl")
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
 local mm = require("util.matrixmath")
@@ -20,13 +39,6 @@ local glCharv    = ffi.typeof('GLchar[?]')
 local glSizeiv   = ffi.typeof('GLsizei[?]')
 local glFloatv   = ffi.typeof('GLfloat[?]')
 local glConstCharpp = ffi.typeof('const GLchar *[1]')
-
-local vbos = {}
-local vao = 0
-local prog_display = 0
-local prog_accel = 0
-local prog_acceltiled = 0
-local prog_integrate = 0
 
 local pt_vert = [[
 #version 310 es
@@ -166,7 +178,7 @@ local particles = 24*1024/2
 local galaxysize = 10.0
 local aspect = 0.1
 
-local function init_point_attributes()
+function nbody07:init_point_attributes()
     -- attribute array: mass, radsq, brite, rad
     -- position array: x, y, z, 1
     pos_array = ffi.new("float[?]", particles*4)
@@ -280,22 +292,22 @@ local function init_point_attributes()
     gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 3, vboA)
     --gl.glBindBufferBase(GL.GL_SHADER_STORAGE_BUFFER, 1, vboV1)
 
-    table.insert(vbos, vboP)
-    table.insert(vbos, vboM)
-    table.insert(vbos, vboV)
-    table.insert(vbos, vboA)
+    table.insert(self.vbos, vboP)
+    table.insert(self.vbos, vboM)
+    table.insert(self.vbos, vboV)
+    table.insert(self.vbos, vboA)
     
     local dt = 1/1000
     
-    gl.glUseProgram(prog_accel)
+    gl.glUseProgram(self.prog_accel)
     gl.glUniform1f(0, dt)
-    gl.glUseProgram(prog_acceltiled)
+    gl.glUseProgram(self.prog_acceltiled)
     gl.glUniform1f(0, dt)
-    gl.glUseProgram(prog_integrate)
+    gl.glUseProgram(self.prog_integrate)
     gl.glUniform1f(0, dt)
 end
 
-local function init_quad_attributes()
+function nbody07:init_quad_attributes()
     local verts = glFloatv(4*3, {
         -1,-1,0,
         1,-1,0,
@@ -308,54 +320,54 @@ local function init_quad_attributes()
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(2, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(vbos, vvbo[0])
+    table.insert(self.vbos, vvbo[0])
 
     gl.glEnableVertexAttribArray(2)
 end
 
-function nbody07.initGL()
+function nbody07:initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
-    vao = vaoId[0]
-    gl.glBindVertexArray(vao)
+    self.vao = vaoId[0]
+    gl.glBindVertexArray(self.vao)
 
-    prog_display = sf.make_shader_from_source({
+    self.prog_display = sf.make_shader_from_source({
         vsrc = pt_vert,
         fsrc = rad_frag,
         })
 
-    prog_accel = sf.make_shader_from_source({
+    self.prog_accel = sf.make_shader_from_source({
         compsrc = accel_comp,
         })
-    prog_acceltiled = sf.make_shader_from_source({
+    self.prog_acceltiled = sf.make_shader_from_source({
         compsrc = accel_tiled_comp,
         })
-    prog_integrate = sf.make_shader_from_source({
+    self.prog_integrate = sf.make_shader_from_source({
         compsrc = integ_comp,
         })
 
-    init_point_attributes()
-    init_quad_attributes()
+    self:init_point_attributes()
+    self:init_quad_attributes()
     gl.glBindVertexArray(0)
 end
 
-function nbody07.exitGL()
-    gl.glBindVertexArray(vao)
-    for _,v in pairs(vbos) do
+function nbody07:exitGL()
+    gl.glBindVertexArray(self.vao)
+    for _,v in pairs(self.vbos) do
         local vboId = ffi.new("GLuint[1]", v)
         gl.glDeleteBuffers(1,vboId)
     end
-    vbos = {}
-    gl.glDeleteProgram(prog_display)
-    gl.glDeleteProgram(prog_accel)
-    gl.glDeleteProgram(prog_acceltiled)
-    gl.glDeleteProgram(prog_integrate)
-    local vaoId = ffi.new("GLuint[2]", vao)
+    self.vbos = {}
+    gl.glDeleteProgram(self.prog_display)
+    gl.glDeleteProgram(self.prog_accel)
+    gl.glDeleteProgram(self.prog_acceltiled)
+    gl.glDeleteProgram(self.prog_integrate)
+    local vaoId = ffi.new("GLuint[2]", self.vao)
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
-function nbody07.render_for_one_eye(mview, proj)
-    gl.glUseProgram(prog_display)
+function nbody07:render_for_one_eye(mview, proj)
+    gl.glUseProgram(self.prog_display)
     gl.glClearColor(0,0,0,0)
     gl.glClear(GL.GL_COLOR_BUFFER_BIT)
     
@@ -367,7 +379,7 @@ function nbody07.render_for_one_eye(mview, proj)
     --gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE)
     --gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_COLOR)
     gl.glBlendFunc(GL.GL_SRC_COLOR, GL.GL_ONE_MINUS_SRC_COLOR)
-    gl.glBindVertexArray(vao)
+    gl.glBindVertexArray(self.vao)
     --gl.glDrawArrays(GL.GL_POINTS, 0, particles)
     gl.glDrawArraysInstanced(GL.GL_TRIANGLE_FAN, 0, 4, particles)
     gl.glBindVertexArray(0)
@@ -377,13 +389,13 @@ function nbody07.render_for_one_eye(mview, proj)
     gl.glUseProgram(0)
 end
 
-function nbody07.timestep(absTime, dt)
+function nbody07:timestep(absTime, dt)
     
-    gl.glUseProgram(prog_acceltiled)
+    gl.glUseProgram(self.prog_acceltiled)
     --gl.glUseProgram(prog_accel)
     gl.glDispatchCompute(particles/128, 1, 1)
 
-    gl.glUseProgram(prog_integrate)
+    gl.glUseProgram(self.prog_integrate)
     gl.glDispatchCompute(particles/128, 1, 1)
     gl.glUseProgram(0)
 end

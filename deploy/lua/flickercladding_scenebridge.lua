@@ -20,7 +20,7 @@ local ANDROID = false
 local win_w,win_h = 800,800
 local lastSceneChangeTime = 0
 
-local scenedir = "scene2"
+local scenedir = "scene"
 
 function switch_to_scene(name)
     local fullname = scenedir.."."..name

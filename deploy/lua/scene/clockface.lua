@@ -11,11 +11,29 @@
     per second. The smallest hand rotates 10 times per second.
 
     This scene can be useful to check that the internal time functions
-    are returning values concistent with wall clock time. 
+    are returning values consistent with wall clock time. 
 ]]
 clockface = {}
 
-local openGL = require("opengl")
+clockface.__index = clockface
+
+function clockface.new(...)
+    local self = setmetatable({}, clockface)
+    if self.init ~= nil and type(self.init) == "function" then
+        self:init(...)
+    end 
+    return self
+end
+
+function clockface:init()
+    -- Object-internal state: hold a list of VBOs for deletion on exitGL
+    self.vbos = {}
+    self.vao = 0
+    self.prog = 0
+    self.absoluteTime = 0 -- Hold time here for drawing
+end
+
+--local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
@@ -23,12 +41,6 @@ local sf = require("util.shaderfunctions")
 local glIntv   = ffi.typeof('GLint[?]')
 local glUintv  = ffi.typeof('GLuint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
-
--- Module state
-local vbos = {}
-local vao = 0
-local prog = 0
-local absoluteTime = 0 -- Hold time here for drawing
 
 local basic_vert = [[
 #version 310 es
@@ -66,84 +78,85 @@ void main()
 ]]
 
 
-local function init_tri_attributes()
-    local verts = glFloatv(3*8, {
+function clockface:init_tri_attributes()
+    local verts = glFloatv(3*3, {
         -.1,0,0,
         .1,0,0,
         0,1,0,
         })
 
-    local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
-    local vcol_loc = gl.glGetAttribLocation(prog, "vColor")
+    local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
+    local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
 
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(vbos, vvbo)
+    table.insert(self.vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(vbos, cvbo)
+    table.insert(self.vbos, cvbo)
 
     gl.glEnableVertexAttribArray(vpos_loc)
     gl.glEnableVertexAttribArray(vcol_loc)
 
-    local quads = glUintv(6*6, {
+    local quads = glUintv(3, {
         0,1,2,
     })
     local qvbo = glIntv(0)
     gl.glGenBuffers(1, qvbo)
     gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, qvbo[0])
     gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, ffi.sizeof(quads), quads, GL.GL_STATIC_DRAW)
-    table.insert(vbos, qvbo)
+    table.insert(self.vbos, qvbo)
 end
 
-function clockface.initGL()
+function clockface:initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
-    vao = vaoId[0]
-    gl.glBindVertexArray(vao)
+    self.vao = vaoId[0]
+    gl.glBindVertexArray(self.vao)
 
-    prog = sf.make_shader_from_source({
+    self.prog = sf.make_shader_from_source({
         vsrc = basic_vert,
         fsrc = basic_frag,
         })
 
-    init_tri_attributes()
+    self:init_tri_attributes()
     gl.glBindVertexArray(0)
 end
 
-function clockface.exitGL()
-    gl.glBindVertexArray(vao)
-    for _,v in pairs(vbos) do
+function clockface:exitGL()
+    gl.glBindVertexArray(self.vao)
+    for _,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
     end
-    vbos = {}
-    gl.glDeleteProgram(prog)
-    local vaoId = ffi.new("GLuint[1]", vao)
+    self.vbos = {}
+    gl.glDeleteProgram(self.prog)
+    local vaoId = ffi.new("GLuint[1]", self.vao)
     gl.glDeleteVertexArrays(1, vaoId)
+    gl.glBindVertexArray(0)
 end
 
-function clockface.render_for_one_eye(view, proj)
-    local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
-    local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
-    gl.glUseProgram(prog)
+function clockface:render_for_one_eye(view, proj)
+    local umv_loc = gl.glGetUniformLocation(self.prog, "mvmtx")
+    local upr_loc = gl.glGetUniformLocation(self.prog, "prmtx")
+    gl.glUseProgram(self.prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
     
     local m = {}
     mm.make_identity_matrix(m)
-    mm.glh_rotate(m, 360*absoluteTime, 0,0,-1)
+    mm.glh_rotate(m, 360*self.absoluteTime, 0,0,-1)
     mm.pre_multiply(m, view)
 
     local m10 = {}
     mm.make_identity_matrix(m10)
     mm.glh_translate(m10, 0,0,.02)
-    local rotations10 = 10*absoluteTime
+    local rotations10 = 10*self.absoluteTime
     mm.glh_rotate(m10, 360*rotations10, 0,0,-1)
     mm.glh_scale(m10, .5,.5,.5)
     mm.pre_multiply(m10, view)
@@ -151,13 +164,13 @@ function clockface.render_for_one_eye(view, proj)
     local m01= {}
     mm.make_identity_matrix(m01)
     mm.glh_translate(m01, 0,0,-.02)
-    local rotations01 = .1*absoluteTime
+    local rotations01 = .1*self.absoluteTime
     rotations01 = math.floor(rotations01*10)/60
     mm.glh_rotate(m01, 360*rotations01, 0,0,-1)
     mm.glh_scale(m01, 2,2,2)
     mm.pre_multiply(m01, view)
 
-    gl.glBindVertexArray(vao)
+    gl.glBindVertexArray(self.vao)
 
     gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, m))
     gl.glDrawElements(GL.GL_TRIANGLES, 3, GL.GL_UNSIGNED_INT, nil)
@@ -170,8 +183,8 @@ function clockface.render_for_one_eye(view, proj)
     gl.glUseProgram(0)
 end
 
-function clockface.timestep(absTime, dt)
-    absoluteTime = absTime
+function clockface:timestep(absTime, dt)
+    self.absoluteTime = absTime
 end
 
 return clockface

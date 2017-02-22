@@ -6,27 +6,6 @@ Loads molecules from PDB files and displays them using imposters.
 
 molecule = {}
 
-molecule.__index = molecule
-
-function molecule.new(...)
-    local self = setmetatable({}, molecule)
-    if self.init ~= nil and type(self.init) == "function" then
-        self:init(...)
-    end 
-    return self
-end
-
-function molecule:init()
-    -- Object-internal state: hold a list of VBOs for deletion on exitGL
-    self.vbos = {}
-    self.vao = 0
-    self.prog = 0
-    self.texID = 0
-    self.dataDir = nil
-    self.mol = nil
-    self.num_atoms = 0
-end
-
 --local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
@@ -35,6 +14,13 @@ local sf = require("util.shaderfunctions")
 local glIntv     = ffi.typeof('GLint[?]')
 local glUintv    = ffi.typeof('GLuint[?]')
 local glFloatv   = ffi.typeof('GLfloat[?]')
+
+local vbos = {}
+local vao = 0
+local prog = 0
+local mol = nil
+local num_atoms = 0
+local dataDir
 
 local basic_vert = [[
 #version 310 es
@@ -148,8 +134,8 @@ void main()
 ]]
 
 
-function molecule:init_molecule(mol)
-    self.num_atoms = #mol
+local function init_molecule(mol)
+    num_atoms = #mol
     print(#mol)
 
     local coords_array = {}
@@ -201,33 +187,33 @@ function molecule:init_molecule(mol)
         coords_array[4*i+3] = coords_array[4*i+3] - cz
     end
 
-    local verts = glFloatv(4*3*self.num_atoms, coords_array)
-    local colors = glFloatv(3*3*self.num_atoms, colors_array)
+    local verts = glFloatv(4*3*num_atoms, coords_array)
+    local colors = glFloatv(3*3*num_atoms, colors_array)
 
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(0, 4, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(self.vbos, vvbo)
+    table.insert(vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(colors), colors, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(self.vbos, cvbo)
+    table.insert(vbos, cvbo)
 
     gl.glEnableVertexAttribArray(0)
     gl.glEnableVertexAttribArray(1)
 end
 
-function molecule:setDataDirectory(dir)
-    self.dataDir = dir
+function molecule.setDataDirectory(dir)
+    dataDir = dir
 end
 
-function molecule:read_xyz(file_name)
-    if self.dataDir then file_name = self.dataDir .. "/" .. file_name end
+local function read_xyz(file_name)
+    if dataDir then file_name = dataDir .. "/" .. file_name end
 
     local file = io.open(file_name, "r")
     print(file, file_name)
@@ -249,8 +235,8 @@ function molecule:read_xyz(file_name)
     return mol
 end
 
-function molecule:read_pdb(file_name)
-    if self.dataDir then file_name = self.dataDir .. "/" .. file_name end
+local function read_pdb(file_name)
+    if dataDir then file_name = dataDir .. "/" .. file_name end
 
     local file = io.open(file_name, "r")
     print(file, file_name)
@@ -281,46 +267,59 @@ function molecule:read_pdb(file_name)
     return mol
 end
 
-function molecule:initGL()
+function molecule.initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
-    self.vao = vaoId[0]
-    gl.glBindVertexArray(self.vao)
+    vao = vaoId[0]
+    gl.glBindVertexArray(vao)
 
-    self.prog = sf.make_shader_from_source({
+    prog = sf.make_shader_from_source({
         vsrc = basic_vert,
         fsrc = basic_frag,
         })
 
     arg = 'mol_diff_gear.pdb'
-    self.mol = self:read_pdb(arg)
+    mol = read_pdb(arg)
     print("Loaded", arg)
 
-    self:init_molecule(self.mol)
+    init_molecule(mol)
     gl.glBindVertexArray(0)
 end
 
-function molecule:exitGL()
-    gl.glBindVertexArray(self.vao)
-    for _,v in pairs(self.vbos) do
+function molecule.exitGL()
+    gl.glBindVertexArray(vao)
+    for _,v in pairs(vbos) do
         gl.glDeleteBuffers(1,v)
     end
-    self.vbos = {}
-    gl.glDeleteProgram(self.prog)
-    local vaoId = ffi.new("GLuint[1]", self.vao)
+    vbos = {}
+    gl.glDeleteProgram(prog)
+    local vaoId = ffi.new("GLuint[1]", vao)
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
-function molecule:render_for_one_eye(mview, proj)
-    gl.glUseProgram(self.prog)
+local function draw_color_cube()
+    gl.glBindVertexArray(vao)
+    gl.glDrawElements(GL.GL_TRIANGLES, 6*3*2, GL.GL_UNSIGNED_INT, nil)
+    gl.glBindVertexArray(0)
+end
+
+local function draw_molecule()
+    gl.glBindVertexArray(vao)
+    gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3 * num_atoms)
+    gl.glBindVertexArray(0)
+end
+
+function molecule.render_for_one_eye(mview, proj)
+    gl.glUseProgram(prog)
     gl.glUniformMatrix4fv(0, 1, GL.GL_FALSE, glFloatv(16, mview))
     gl.glUniformMatrix4fv(1, 1, GL.GL_FALSE, glFloatv(16, proj))
 
-    gl.glBindVertexArray(self.vao)
-    gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3 * self.num_atoms)
-    gl.glBindVertexArray(0)
+    draw_molecule()
 
     gl.glUseProgram(0)
+end
+
+function molecule.timestep(absTime, dt)
 end
 
 return molecule

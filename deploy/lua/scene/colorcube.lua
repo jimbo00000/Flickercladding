@@ -8,19 +8,31 @@
 ]]
 colorcube = {}
 
-local openGL = require("opengl")
+colorcube.__index = colorcube
+
+function colorcube.new(...)
+    local self = setmetatable({}, colorcube)
+    if self.init ~= nil and type(self.init) == "function" then
+        self:init(...)
+    end 
+    return self
+end
+
+function colorcube:init()
+    self.vbos = {}
+    self.vao = 0
+    self.prog = 0
+    self.rotation = 0
+end
+
+--local openGL = require("opengl")
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
 
-local glIntv     = ffi.typeof('GLint[?]')
-local glUintv    = ffi.typeof('GLuint[?]')
-local glFloatv   = ffi.typeof('GLfloat[?]')
-
-local vbos = {}
-local vao = 0
-local prog = 0
-local rotation = 0
+local glIntv   = ffi.typeof('GLint[?]')
+local glUintv  = ffi.typeof('GLuint[?]')
+local glFloatv = ffi.typeof('GLfloat[?]')
 
 local basic_vert = [[
 #version 310 es
@@ -58,7 +70,7 @@ void main()
 ]]
 
 
-local function init_cube_attributes()
+function colorcube:init_cube_attributes()
     local verts = glFloatv(3*8, {
         0,0,0,
         1,0,0,
@@ -70,22 +82,22 @@ local function init_cube_attributes()
         0,1,1
         })
 
-    local vpos_loc = gl.glGetAttribLocation(prog, "vPosition")
-    local vcol_loc = gl.glGetAttribLocation(prog, "vColor")
+    local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
+    local vcol_loc = gl.glGetAttribLocation(self.prog, "vColor")
 
     local vvbo = glIntv(0)
     gl.glGenBuffers(1, vvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(vpos_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(vbos, vvbo)
+    table.insert(self.vbos, vvbo)
 
     local cvbo = glIntv(0)
     gl.glGenBuffers(1, cvbo)
     gl.glBindBuffer(GL.GL_ARRAY_BUFFER, cvbo[0])
     gl.glBufferData(GL.GL_ARRAY_BUFFER, ffi.sizeof(verts), verts, GL.GL_STATIC_DRAW)
     gl.glVertexAttribPointer(vcol_loc, 3, GL.GL_FLOAT, GL.GL_FALSE, 0, nil)
-    table.insert(vbos, cvbo)
+    table.insert(self.vbos, cvbo)
 
     gl.glEnableVertexAttribArray(vpos_loc)
     gl.glEnableVertexAttribArray(vcol_loc)
@@ -102,56 +114,56 @@ local function init_cube_attributes()
     gl.glGenBuffers(1, qvbo)
     gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, qvbo[0])
     gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, ffi.sizeof(quads), quads, GL.GL_STATIC_DRAW)
-    table.insert(vbos, qvbo)
+    table.insert(self.vbos, qvbo)
 end
 
-function colorcube.initGL()
+function colorcube:initGL()
     local vaoId = ffi.new("int[1]")
     gl.glGenVertexArrays(1, vaoId)
-    vao = vaoId[0]
-    gl.glBindVertexArray(vao)
+    self.vao = vaoId[0]
+    gl.glBindVertexArray(self.vao)
 
-    prog = sf.make_shader_from_source({
+    self.prog = sf.make_shader_from_source({
         vsrc = basic_vert,
         fsrc = basic_frag,
         })
 
-    init_cube_attributes()
+    self:init_cube_attributes()
     gl.glBindVertexArray(0)
 end
 
-function colorcube.exitGL()
-    gl.glBindVertexArray(vao)
-    for _,v in pairs(vbos) do
+function colorcube:exitGL()
+    gl.glBindVertexArray(self.vao)
+    for _,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
     end
-    vbos = {}
-    gl.glDeleteProgram(prog)
-    local vaoId = ffi.new("GLuint[1]", vao)
+    self.vbos = {}
+    gl.glDeleteProgram(self.prog)
+    local vaoId = ffi.new("GLuint[1]", self.vao)
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
-function colorcube.render_for_one_eye(view, proj)
+function colorcube:render_for_one_eye(view, proj)
     -- Rotate the cube slowly around its center
     local m = {}
     for i=1,16 do m[i] = view[i] end
-    mm.glh_rotate(m, 30*rotation, 0,1,0)
-    mm.glh_rotate(m, 13*rotation, 1,0,0)
+    mm.glh_rotate(m, 30*self.rotation, 0,1,0)
+    mm.glh_rotate(m, 13*self.rotation, 1,0,0)
     mm.glh_translate(m, -.5,-.5,-.5)
 
-    local umv_loc = gl.glGetUniformLocation(prog, "mvmtx")
-    local upr_loc = gl.glGetUniformLocation(prog, "prmtx")
-    gl.glUseProgram(prog)
+    local umv_loc = gl.glGetUniformLocation(self.prog, "mvmtx")
+    local upr_loc = gl.glGetUniformLocation(self.prog, "prmtx")
+    gl.glUseProgram(self.prog)
     gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
     gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, m))
-    gl.glBindVertexArray(vao)
+    gl.glBindVertexArray(self.vao)
     gl.glDrawElements(GL.GL_TRIANGLES, 6*3*2, GL.GL_UNSIGNED_INT, nil)
     gl.glBindVertexArray(0)
     gl.glUseProgram(0)
 end
 
-function colorcube.timestep(absTime, dt)
-    rotation = absTime
+function colorcube:timestep(absTime, dt)
+    self.rotation = absTime
 end
 
 return colorcube

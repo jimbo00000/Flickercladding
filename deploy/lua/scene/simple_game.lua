@@ -42,7 +42,7 @@ end
 local ffi = require("ffi")
 local mm = require("util.matrixmath")
 local sf = require("util.shaderfunctions")
-local OriginLibrary = require("scene2.origin")
+local OriginLibrary = require("scene.origin")
 
 local glIntv   = ffi.typeof('GLint[?]')
 local glUintv  = ffi.typeof('GLuint[?]')
