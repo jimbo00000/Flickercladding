@@ -72,7 +72,7 @@ void main()
 }
 ]]
 
-function vsfstri:init_tri_attributes()
+function vsfstri:initTriAttributes()
     local verts = glFloatv(3*3, {
         0,0,0,
         1,0,0,
@@ -111,7 +111,7 @@ function vsfstri:initGL()
         fsrc = basic_frag,
         })
 
-    self:init_tri_attributes()
+    self:initTriAttributes()
     gl.glBindVertexArray(0)
 end
 

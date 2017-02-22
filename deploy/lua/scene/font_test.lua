@@ -60,7 +60,7 @@ function font_test:render_for_one_eye(view, proj)
     local m = {}
     local s = .002
     mm.make_identity_matrix(m)
-    mm.glh_translate(m, -2, 1.2, 0)
+    mm.glh_translate(m, 2, 1.2, 0)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
 

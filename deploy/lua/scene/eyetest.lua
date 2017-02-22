@@ -55,7 +55,7 @@ end
 function eyetest:render_for_one_eye(view, proj)
     local m = {1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}
     local s = .01
-    mm.glh_translate(m, 0, 2, 0)
+    mm.glh_translate(m, -2, 2, 0)
     mm.glh_scale(m, s, -s, s)
     mm.pre_multiply(m, view)
 

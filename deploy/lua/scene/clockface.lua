@@ -27,8 +27,8 @@ end
 
 function clockface:init()
     -- Object-internal state: hold a list of VBOs for deletion on exitGL
-    self.vbos = {}
     self.vao = 0
+    self.vbos = {}
     self.prog = 0
     self.absoluteTime = 0 -- Hold time here for drawing
 end
@@ -150,12 +150,13 @@ function clockface:render_for_one_eye(view, proj)
     
     local m = {}
     mm.make_identity_matrix(m)
+    mm.glh_translate(m,0,1.3,0)
     mm.glh_rotate(m, 360*self.absoluteTime, 0,0,-1)
     mm.pre_multiply(m, view)
 
     local m10 = {}
     mm.make_identity_matrix(m10)
-    mm.glh_translate(m10, 0,0,.02)
+    mm.glh_translate(m10, 0,1.3,.02)
     local rotations10 = 10*self.absoluteTime
     mm.glh_rotate(m10, 360*rotations10, 0,0,-1)
     mm.glh_scale(m10, .5,.5,.5)
@@ -163,7 +164,7 @@ function clockface:render_for_one_eye(view, proj)
 
     local m01= {}
     mm.make_identity_matrix(m01)
-    mm.glh_translate(m01, 0,0,-.02)
+    mm.glh_translate(m01, 0,1.3,-.02)
     local rotations01 = .1*self.absoluteTime
     rotations01 = math.floor(rotations01*10)/60
     mm.glh_rotate(m01, 360*rotations01, 0,0,-1)
