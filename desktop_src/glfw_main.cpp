@@ -64,42 +64,44 @@ void keyboard(GLFWwindow* pWindow, int key, int codes, int action, int mods)
         default:
             break;
 
-        case GLFW_KEY_F1:
+            // F1 toggles camera controls
+
+        case GLFW_KEY_F2:
             winw = 1000;
             winh = 800;
             portrait = !portrait;
             setAppScreenSize();
             break;
 
-        case GLFW_KEY_F2:
+        case GLFW_KEY_F3:
             winw = 2560/2;
             winh = 1440/2;
             portrait = !portrait;
             setAppScreenSize();
             break;
 
-        case GLFW_KEY_F3:
+        case GLFW_KEY_F4:
             winw = 2048/2;
             winh = 1440/2;
             portrait = !portrait;
             setAppScreenSize();
             break;
 
-        case GLFW_KEY_F4:
+        case GLFW_KEY_F5:
             winw = 640;
             winh = 480;
             portrait = !portrait;
             setAppScreenSize();
             break;
 
-        case GLFW_KEY_F5:
+        case GLFW_KEY_F6:
             winw = 1200/2;
             winh = 1824/2;
             portrait = !portrait;
             setAppScreenSize();
             break;
 
-        case GLFW_KEY_F6:
+        case GLFW_KEY_F7:
             winw = 1920/2;
             winh = 1104/2;
             portrait = !portrait;

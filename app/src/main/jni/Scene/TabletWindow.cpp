@@ -394,29 +394,32 @@ void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
 {
     m_luaScene.keypressed(key, scancode, action, mods);
 
-    switch (key)
+    if (action == 1) // key pressed in glfw and SDL
     {
-    default: break;
+        switch (key)
+        {
+        default: break;
 
 #ifdef __ANDROID__
-    case 61: // Tab on Android
+        case 61: // Tab on Android
 #else
-    case 258: // Tab in GLFW3
-    case 9: // Tab in SDL2
+        case 258: // Tab in GLFW3
+        case 9: // Tab in SDL2
 #endif
-        m_luaScene.ChangeScene(1);
-        break;
+            m_luaScene.ChangeScene(1);
+            break;
 
-    case 96: // ` in SDL2
-        m_movingChassisFlag = !m_movingChassisFlag;
-        break;
+        case 290: //#define GLFW_KEY_F1  290
+            m_movingChassisFlag = !m_movingChassisFlag;
+            break;
 
-    case 1073741886: // F5 in SDL2
-        // Refresh Lua state
-        m_luaScene.exitLua();
-        m_luaScene.initGL();
-        m_luaScene.setWindowSize(m_winw, m_winh);
-        break;
+        case 1073741886: // F5 in SDL2
+            // Refresh Lua state
+            m_luaScene.exitLua();
+            m_luaScene.initGL();
+            m_luaScene.setWindowSize(m_winw, m_winh);
+            break;
+        }
     }
 }
 
