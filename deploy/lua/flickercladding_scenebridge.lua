@@ -57,6 +57,7 @@ function switch_to_scene(name)
 end
 
 local scene_modules = {
+    "key_check",
     "simple_game",
     "clockface",
     "droid",
@@ -285,7 +286,7 @@ function on_lua_keypressed(key, scancode, action, mods)
     if ANDROID then
         lookup = kc.android_keycodes_map[key]
     end
-    print("KEY: "..key.." "..scancode.." "..action.." "..mods.." -> "..lookup)
+    --print("KEY: "..key.." "..scancode.." "..action.." "..mods.." -> "..lookup)
 
     -- TODO an escape sequence here?
     if key == 298 then -- F9
@@ -300,6 +301,10 @@ function on_lua_keypressed(key, scancode, action, mods)
 
         if Scene.charkeypressed then
             Scene:charkeypressed(string.char(scancode))
+        end
+    elseif action == 0 then
+        if Scene.keyreleased then
+            Scene:keyreleased(key, scancode, action, mods)
         end
     end
 end

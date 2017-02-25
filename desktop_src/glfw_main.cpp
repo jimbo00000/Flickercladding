@@ -55,12 +55,13 @@ void keyboard(GLFWwindow* pWindow, int key, int codes, int action, int mods)
     (void)pWindow;
     (void)codes;
 
+    onKeyEvent(key, codes, action, mods);
+
     if (action == GLFW_PRESS)
     {
     switch (key)
     {
         default:
-            onKeyEvent(key, codes, action, mods);
             break;
 
         case GLFW_KEY_F1:
