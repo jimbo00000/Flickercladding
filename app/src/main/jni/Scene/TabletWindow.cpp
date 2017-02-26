@@ -410,11 +410,6 @@ void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
         {
         default: break;
 
-        case 258: // Tab in GLFW3
-        case 9: // Tab in SDL2
-            m_luaScene.ChangeScene(1);
-            break;
-
         case 290: //#define GLFW_KEY_F1  290
             m_movingChassisFlag = !m_movingChassisFlag;
             break;

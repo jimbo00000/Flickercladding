@@ -294,6 +294,11 @@ function on_lua_keypressed(key, scancode, action, mods)
     end
 
     if action == 1 then
+        -- Check for scene switch
+        if key == 9 or key == 258 then
+            switch_scene(mods ~= 0)
+        end
+
         if Scene.keypressed then
             local consumed = Scene:keypressed(key, scancode, action, mods)
             if consumed then return end
