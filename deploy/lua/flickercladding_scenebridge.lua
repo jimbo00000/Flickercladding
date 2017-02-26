@@ -301,6 +301,22 @@ function on_lua_keypressed(key, scancode, action, mods)
 
         if Scene.keypressed then
             local consumed = Scene:keypressed(key, scancode, action, mods)
+            if key == 96 then return end -- toggle with ` handled in Scene
+
+            -- TODO: munge up these keys correctly to emit printable characters
+            local function is_printable(code)
+                if code < 0x1f then return false end
+                if code > 0x7e then return false end
+                return true
+            end
+
+            local ch = key
+            local shiftval = 97 - 65
+            if bit.band(mods,shift) ~= 0 then ch = ch + shiftval end
+            if is_printable(ch) then
+                Scene:charkeypressed(string.char(ch))
+            end
+
             if consumed then return end
         end
 
