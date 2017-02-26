@@ -392,6 +392,7 @@ void TabletWindow::OnWheelEvent(double dx, double dy)
 
 void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
 {
+    LOG_INFO("OnKeyEvent: %d %d %d %d\n", key, scancode, action, mods);
     m_luaScene.keypressed(key, scancode, action, mods);
 
     if (action == 1) // key pressed in glfw and SDL
@@ -400,12 +401,8 @@ void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
         {
         default: break;
 
-#ifdef __ANDROID__
-        case 61: // Tab on Android
-#else
         case 258: // Tab in GLFW3
         case 9: // Tab in SDL2
-#endif
             m_luaScene.ChangeScene(1);
             break;
 
