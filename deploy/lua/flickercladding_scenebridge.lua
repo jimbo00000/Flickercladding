@@ -58,7 +58,7 @@ end
 
 local scene_modules = {
     "key_check",
-    "simple_game",
+    "shadertoy_editor",
     "clockface",
     "droid",
     "colorcube",
@@ -71,6 +71,7 @@ local scene_modules = {
     "nbody07",
     "multipass_example",
     "molecule",
+    "simple_game",
 
 --[[
    "scene.postprocessingslides_scene",
@@ -278,15 +279,12 @@ function connect_to_debugger()
 end
 
 function on_lua_keypressed(key, scancode, action, mods)
-
-    --TODO: Set some flag in CMake, send it here via a new entry point
-    local lookup = kc.glfw_keycodes_map[key]
-    --local lookup = kc.sdl_keycodes_map[key]
-
+    local shift = 1
+    local ctrl = 2
     if ANDROID then
-        lookup = kc.android_keycodes_map[key]
+        shift = 65
+        ctrl = 12288
     end
-    --print("KEY: "..key.." "..scancode.." "..action.." "..mods.." -> "..lookup)
 
     -- TODO an escape sequence here?
     if key == 298 then -- F9
@@ -295,8 +293,10 @@ function on_lua_keypressed(key, scancode, action, mods)
 
     if action == 1 then
         -- Check for scene switch
-        if key == 9 or key == 258 then
-            switch_scene(mods ~= 0)
+        if bit.band(mods,ctrl) ~= 0 then
+            if key == 9 or key == 258 or scancode == 61 then
+                switch_scene(bit.band(mods,shift) ~= 0)
+            end
         end
 
         if Scene.keypressed then
