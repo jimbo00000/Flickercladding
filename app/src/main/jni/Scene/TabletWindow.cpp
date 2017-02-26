@@ -395,6 +395,15 @@ void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
     LOG_INFO("OnKeyEvent: %d %d %d %d\n", key, scancode, action, mods);
     m_luaScene.keypressed(key, scancode, action, mods);
 
+    // F keys do not have key codes, only scan codes
+    if (key == 0 && action == 1) // pressed
+    {
+        if (scancode == 131) // F1
+        {
+            m_movingChassisFlag = !m_movingChassisFlag;
+        }
+    }
+
     if (action == 1) // key pressed in glfw and SDL
     {
         switch (key)
