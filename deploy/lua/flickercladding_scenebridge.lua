@@ -284,6 +284,13 @@ function on_lua_keypressed(key, scancode, action, mods)
     if ANDROID then
         shift = 65
         ctrl = 12288
+
+        -- Android udlr 19,20,21,22
+        if scancode == 19 then key = 265 end
+        if scancode == 20 then key = 264 end
+        if scancode == 21 then key = 263 end
+        if scancode == 22 then key = 262 end
+        if scancode == 67 then key = 259 end -- bksp
     end
 
     -- TODO an escape sequence here?
