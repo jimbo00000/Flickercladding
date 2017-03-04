@@ -284,6 +284,35 @@ local function is_printable(code)
     return true
 end
 
+local keymap_glfw = {
+    [65] = {'A', 'a'},
+    [66] = {'B', 'b'},
+    [67] = {'C', 'c'},
+    [68] = {'D', 'd'},
+    [69] = {'E', 'e'},
+    [70] = {'F', 'f'},
+    [71] = {'G', 'g'},
+    [72] = {'H', 'h'},
+    [73] = {'I', 'i'},
+    [74] = {'J', 'j'},
+    [75] = {'K', 'k'},
+    [76] = {'L', 'l'},
+    [77] = {'M', 'm'},
+    [78] = {'N', 'n'},
+    [79] = {'O', 'o'},
+    [80] = {'P', 'p'},
+    [81] = {'Q', 'q'},
+    [82] = {'R', 'r'},
+    [83] = {'S', 's'},
+    [84] = {'T', 't'},
+    [85] = {'U', 'u'},
+    [86] = {'V', 'v'},
+    [87] = {'W', 'w'},
+    [88] = {'X', 'x'},
+    [89] = {'Y', 'y'},
+    [90] = {'Z', 'z'},
+}
+
 local function map_keycode(key, mods)
     -- Platform dependent bits for modifiers
     local shift = 1
@@ -292,15 +321,7 @@ local function map_keycode(key, mods)
     local sh12 = 1
     if shiftheld then sh12 = 2 end
 
-    local keymap = {
-        [65] = {'A', 'a'},
-        [66] = {'B', 'b'},
-        [67] = {'C', 'c'},
-        [68] = {'D', 'd'},
-        [69] = {'E', 'e'},
-        [70] = {'F', 'f'},
-        [71] = {'G', 'g'},
-    }
+    local keymap = keymap_glfw
     if keymap[key] then
         return string.byte(keymap[key][sh12])
     end
