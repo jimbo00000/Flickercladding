@@ -320,7 +320,7 @@ function on_lua_keypressed(key, scancode, action, mods)
             local ch = key
             local shiftval = 97 - 65
             if ch < 65 then shiftval = 33 - 49 end
-            if bit.band(mods,shift) ~= 1 then ch = ch + shiftval end
+            if bit.band(mods,shift) ~= shift then ch = ch + shiftval end
             if is_printable(ch) then
                 Scene:charkeypressed(string.char(ch))
             end
