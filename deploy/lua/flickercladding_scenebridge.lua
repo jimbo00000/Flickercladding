@@ -284,6 +284,25 @@ local function is_printable(code)
     return true
 end
 
+local function map_keycode(key, mods)
+    local shift = 1
+    local ctrl = 2
+    if ANDROID then
+        shift = 65
+        ctrl = 12288
+    end
+    local ch = key
+    local shiftval = 97 - 65
+    local shiftheld = bit.band(mods,shift) ~= shift
+    if key < 65 then
+        shiftval = 33 - 49
+        shiftheld = not shiftheld
+    end
+    if shiftheld then ch = ch + shiftval end
+
+    return ch
+end
+
 function on_lua_keypressed(key, scancode, action, mods)
     local shift = 1
     local ctrl = 2
@@ -317,16 +336,7 @@ function on_lua_keypressed(key, scancode, action, mods)
             local consumed = Scene:keypressed(key, scancode, action, mods)
             if key == 96 then return end -- toggle with ` handled in Scene
 
-            -- TODO: proper keymap here?
-            local ch = key
-            local shiftval = 97 - 65
-            local shiftheld = bit.band(mods,shift) ~= shift
-            if ch < 65 then
-                shiftval = 33 - 49
-                shiftheld = not shiftheld
-            end
-            if shiftheld then ch = ch + shiftval end
-
+            local ch = map_keycode(key, mods)
             if is_printable(ch) then
                 Scene:charkeypressed(string.char(ch))
             end
