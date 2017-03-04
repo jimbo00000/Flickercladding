@@ -316,11 +316,16 @@ function on_lua_keypressed(key, scancode, action, mods)
             local consumed = Scene:keypressed(key, scancode, action, mods)
             if key == 96 then return end -- toggle with ` handled in Scene
 
-
+            -- TODO: proper keymap here?
             local ch = key
             local shiftval = 97 - 65
-            if ch < 65 then shiftval = 33 - 49 end
-            if bit.band(mods,shift) ~= shift then ch = ch + shiftval end
+            local shiftheld = bit.band(mods,shift) ~= shift
+            if ch < 65 then
+                shiftval = 33 - 49
+                shiftheld = not shiftheld
+            end
+            if shiftheld then ch = ch + shiftval end
+
             if is_printable(ch) then
                 Scene:charkeypressed(string.char(ch))
             end
