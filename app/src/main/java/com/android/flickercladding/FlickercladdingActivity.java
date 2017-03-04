@@ -70,9 +70,10 @@ public class FlickercladdingActivity extends Activity implements SensorEventList
     public boolean dispatchKeyEvent(KeyEvent event) {
         int keyaction = 1 - event.getAction(); // Down is 0, we want 1
         int keycode = event.getKeyCode();
+        int keyscancode = event.getScanCode();
         int keyunicode = event.getUnicodeChar(event.getMetaState() );
-        char character = (char) keyunicode;
-        FlickercladdingLib.onKeyEvent(keyunicode, keycode, keyaction, event.getMetaState());
+        int keydisplabel = event.getDisplayLabel();
+        FlickercladdingLib.onKeyEvent(keydisplabel, keyscancode, keyaction, event.getMetaState());
         return super.dispatchKeyEvent(event);
     }
 }
