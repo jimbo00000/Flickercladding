@@ -278,6 +278,12 @@ function connect_to_debugger()
     require('mobdebug').start()
 end
 
+local function is_printable(code)
+    if code < 0x20 then return false end
+    if code > 0x7e then return false end
+    return true
+end
+
 function on_lua_keypressed(key, scancode, action, mods)
     local shift = 1
     local ctrl = 2
@@ -310,16 +316,11 @@ function on_lua_keypressed(key, scancode, action, mods)
             local consumed = Scene:keypressed(key, scancode, action, mods)
             if key == 96 then return end -- toggle with ` handled in Scene
 
-            -- TODO: munge up these keys correctly to emit printable characters
-            local function is_printable(code)
-                if code < 0x1f then return false end
-                if code > 0x7e then return false end
-                return true
-            end
 
             local ch = key
             local shiftval = 97 - 65
-            if bit.band(mods,shift) ~= 0 then ch = ch + shiftval end
+            if ch < 65 then shiftval = 33 - 49 end
+            if bit.band(mods,shift) ~= 1 then ch = ch + shiftval end
             if is_printable(ch) then
                 Scene:charkeypressed(string.char(ch))
             end
@@ -328,7 +329,7 @@ function on_lua_keypressed(key, scancode, action, mods)
         end
 
         if Scene.charkeypressed then
-            Scene:charkeypressed(string.char(scancode))
+            --Scene:charkeypressed(string.char(scancode))
         end
     elseif action == 0 then
         if Scene.keyreleased then
