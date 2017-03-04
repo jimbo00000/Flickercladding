@@ -285,15 +285,13 @@ local function is_printable(code)
 end
 
 local function map_keycode(key, mods)
+    -- Platform dependent bits for modifiers
     local shift = 1
-    local ctrl = 2
-    if ANDROID then
-        shift = 65
-        ctrl = 12288
-    end
+    if ANDROID then shift = 65 end
+    local shiftheld = bit.band(mods,shift) ~= shift
+
     local ch = key
     local shiftval = 97 - 65
-    local shiftheld = bit.band(mods,shift) ~= shift
     if key < 65 then
         shiftval = 33 - 49
         shiftheld = not shiftheld
