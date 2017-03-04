@@ -289,16 +289,23 @@ local function map_keycode(key, mods)
     local shift = 1
     if ANDROID then shift = 65 end
     local shiftheld = bit.band(mods,shift) ~= shift
+    local sh12 = 1
+    if shiftheld then sh12 = 2 end
 
-    local ch = key
-    local shiftval = 97 - 65
-    if key < 65 then
-        shiftval = 33 - 49
-        shiftheld = not shiftheld
+    local keymap = {
+        [65] = {'A', 'a'},
+        [66] = {'B', 'b'},
+        [67] = {'C', 'c'},
+        [68] = {'D', 'd'},
+        [69] = {'E', 'e'},
+        [70] = {'F', 'f'},
+        [71] = {'G', 'g'},
+    }
+    if keymap[key] then
+        return string.byte(keymap[key][sh12])
     end
-    if shiftheld then ch = ch + shiftval end
 
-    return ch
+    return key
 end
 
 function on_lua_keypressed(key, scancode, action, mods)
