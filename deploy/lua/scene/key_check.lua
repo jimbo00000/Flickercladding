@@ -20,6 +20,7 @@ function key_check:init()
     self.win_w = 400
     self.win_h = 300
     self.keys_down = {}
+    self.char_string = ''
 end
 
 function key_check:setDataDirectory(dir)
@@ -49,11 +50,14 @@ function key_check:render_for_one_eye(view, proj)
     mm.make_identity_matrix(m)
     mm.glh_scale(m,.5,.5,.5)
     mm.glh_translate(m, 20,120,0)
+    local m2 = {}
+    for i=1,16 do m2[i] = m[i] end
 
     local p = {}
     mm.glh_ortho(p, 0, self.win_w, self.win_h, 0, -1, 1)
     gl.glDisable(GL.GL_DEPTH_TEST)
 
+    mm.glh_translate(m, 0,80,0)
     for k,_ in pairs(self.keys_down) do
         local str = tostring(k)
         if k > 32 and k < string.byte('z') then
@@ -62,10 +66,14 @@ function key_check:render_for_one_eye(view, proj)
         self.glfont:render_string(m, p, col, str)
         mm.glh_translate(m, 0,80,0)
     end
+
+    mm.glh_translate(m2, 280,0,0)
+    self.glfont:render_string(m2, p, col, self.char_string)
 end
 
 function key_check:keypressed(key, scancode, action, mods)
     if action == 1 then
+        if key == 259 then self.char_string = '' end
         self.keys_down[key] = true
     elseif action == 0 then
         self.keys_down[key] = nil
@@ -78,6 +86,7 @@ function key_check:keyreleased(key, scancode, action, mods)
 end
 
 function key_check:charkeypressed(ch)
+    self.char_string = self.char_string..ch
 end
 
 return key_check
