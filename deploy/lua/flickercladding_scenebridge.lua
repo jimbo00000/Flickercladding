@@ -45,6 +45,7 @@ function switch_to_scene(name)
             end
             if Scene.setDataDirectory then Scene:setDataDirectory(dir) end
             if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
+            if Scene.resizeViewport then Scene:resizeViewport(win_w, win_h) end
             Scene:initGL()
             local initTime = clock() - now
             lastSceneChangeTime = now
@@ -409,7 +410,8 @@ end
 
 function on_lua_setwindowsize(w, h)
     win_w,win_h = w,h
-    if Scene.setWindowSize then Scene:setWindowSize(w, h) end
+    if Scene.setWindowSize then Scene:setWindowSize(win_w, win_h) end
+    if Scene.resizeViewport then Scene:resizeViewport(win_w, win_h) end
 end
 
 function on_lua_changescene(d)
