@@ -371,7 +371,7 @@ function on_lua_keypressed(key, scancode, action, mods)
         connect_to_debugger()
     end
 
-    if action == 1 then
+    if action == 1 or action == 2 then
         -- Check for scene switch
         if bit.band(mods,ctrl) ~= 0 then
             if key == 9 or key == 258 or scancode == 61 then
