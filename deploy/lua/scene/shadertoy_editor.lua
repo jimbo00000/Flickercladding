@@ -281,6 +281,8 @@ function shadertoy_editor:initGL()
     self:initQuadAttributes()
     gl.glBindVertexArray(0)
 
+    local dir = "fonts"
+    if self.data_dir then dir = self.data_dir .. "/" .. dir end
     self.glfont = GLFont.new('courier_512.fnt', 'courier_512_0.raw')
     self.glfont:setDataDirectory(dir)
     self.glfont:initGL()

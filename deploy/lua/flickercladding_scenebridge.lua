@@ -58,7 +58,7 @@ function switch_to_scene(name)
 end
 
 local scene_modules = {
-    "key_check",
+    --"key_check",
     "shadertoy_editor",
     "clockface",
     "droid",

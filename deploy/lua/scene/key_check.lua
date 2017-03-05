@@ -28,7 +28,7 @@ function key_check:setDataDirectory(dir)
 end
 
 function key_check:initGL()
-    dir = "fonts"
+    local dir = "fonts"
     if self.dataDir then dir = self.dataDir .. "/" .. dir end
     self.glfont = GLFont.new('courier_512.fnt', 'courier_512_0.raw')
     self.glfont:setDataDirectory(dir)
