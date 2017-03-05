@@ -361,8 +361,9 @@ function on_lua_keypressed(key, scancode, action, mods)
         if scancode == 20 then key = 264 end
         if scancode == 21 then key = 263 end
         if scancode == 22 then key = 262 end
-        if scancode == 67 then key = 259 end -- bksp
         if scancode == 66 then key = 257 end -- enter
+        if scancode == 61 then key = 258 end -- tab
+        if scancode == 67 then key = 259 end -- bksp
     end
 
     -- Munge mods bits to match desktop
