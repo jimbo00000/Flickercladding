@@ -155,7 +155,7 @@ function EditBuffer:savetofile(filename)
         end
         file:close()
     else
-        print("file "..filename.." not found.")
+        print("file "..filename.." could not be opened.")
     end
 end
 

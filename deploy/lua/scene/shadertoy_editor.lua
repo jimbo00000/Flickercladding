@@ -5,6 +5,7 @@
 local ffi = require "ffi"
 local mm = require "util.matrixmath"
 local EditorLibrary = require "scene.stringedit_scene"
+require "util.glfont"
 
 shadertoy_editor = {}
 shadertoy_editor.__index = shadertoy_editor
@@ -43,6 +44,10 @@ function shadertoy_editor:init()
     self.fragsrc = frag_body
 
     self.update_every_key = true
+
+    self.show_filename_buffer = true
+    self.filename_buffer = "Filename here"
+    self.glfont = nil
 end
 
 function shadertoy_editor:loadShaderFromDataFile()
@@ -275,9 +280,14 @@ function shadertoy_editor:initGL()
 
     self:initQuadAttributes()
     gl.glBindVertexArray(0)
+
+    self.glfont = GLFont.new('courier_512.fnt', 'courier_512_0.raw')
+    self.glfont:setDataDirectory(dir)
+    self.glfont:initGL()
 end
 
 function shadertoy_editor:exitGL()
+    self.glfont:exitGL()
     gl.glBindVertexArray(self.vao)
     for _,v in pairs(self.vbos) do
         gl.glDeleteBuffers(1,v)
@@ -315,6 +325,28 @@ function shadertoy_editor:render_for_one_eye(view, proj)
         self.Editor:render_for_one_eye(mv,id)
         gl.glEnable(GL.GL_DEPTH_TEST)
     end
+
+    if self.show_filename_buffer then
+        self:renderFilenameBuffer(view, proj)
+    end
+end
+
+function shadertoy_editor:renderFilenameBuffer(view, proj)
+    local col = {1, 1, 1}
+
+    local m = {}
+    mm.make_identity_matrix(m)
+    mm.glh_scale(m,.5,.5,.5)
+    mm.glh_translate(m, 20,120,0)
+    local m2 = {}
+    for i=1,16 do m2[i] = m[i] end
+
+    local p = {}
+    mm.glh_ortho(p, 0, self.win_w, self.win_h, 0, -1, 1)
+    gl.glDisable(GL.GL_DEPTH_TEST)
+
+    mm.glh_translate(m2, 280,0,0)
+    self.glfont:render_string(m2, p, col, self.filename_buffer)
 end
 
 function shadertoy_editor:timestep(absTime, dt)
@@ -326,6 +358,39 @@ function shadertoy_editor:resizeViewport(w,h)
 end
 
 function shadertoy_editor:keypressed(key, scancode, action, mods)
+    if key == 258 then -- Tab
+        self:toggleFilenameBuffer()
+    end
+
+    if self.show_filename_buffer then
+        if key == 259 then -- Backspace
+            self.filename_buffer = string.sub(self.filename_buffer, 1, #self.filename_buffer-1)
+        elseif key == 257 then -- Enter
+            local fn = self.filename_buffer
+
+            -- Add suffix automatically
+            -- http://lua-users.org/wiki/StringRecipes
+            function string.ends(String,End)
+               return End=='' or string.sub(String,-string.len(End))==End
+            end
+            if not string.ends(fn,'.glsl') then fn = fn..'.glsl' end
+            self.filename_buffer = fn -- reassign
+
+            print("LOAD: ",fn, self.data_dir)
+
+            self.Editor = EditorLibrary.new({
+                filename = "shaders/"..fn,
+                data_dir = self.data_dir
+                })
+            if self.Editor then
+                self.Editor:initGL()
+                self:reloadShader()
+                self.show_filename_buffer = false
+            end   
+        end
+        return
+    end
+
     if key == 96 then
         self:toggleEditor()
         return true
@@ -345,8 +410,11 @@ function shadertoy_editor:keypressed(key, scancode, action, mods)
         if mods == 2 then -- ctrl held
             if action == 1 then -- press
                 if key == string.byte('S') then
-                    self:reloadShader()
-                    self:saveShader()
+                    print("SAVE: ",self.filename_buffer, self.data_dir)
+                    local fn = self.data_dir..'/'.."shaders/"..self.filename_buffer
+                    if self.Editor then
+                        self.Editor.editbuf:savetofile(fn)
+                    end
                     return true
                 end
             end
@@ -363,6 +431,11 @@ function shadertoy_editor:keypressed(key, scancode, action, mods)
 end
 
 function shadertoy_editor:charkeypressed(ch)
+    if self.show_filename_buffer then
+        self.filename_buffer = self.filename_buffer..ch
+        return
+    end
+
     if string.byte(ch) == 96 then
         self:toggleEditor()
         return true
@@ -380,6 +453,9 @@ function shadertoy_editor:charkeypressed(ch)
 end
 
 function shadertoy_editor:onwheel(x,y)
+    if self.Editor then
+        self.Editor:onwheel(x,y)
+    end
 end
 
 function shadertoy_editor:toggleEditor()
@@ -395,6 +471,10 @@ function shadertoy_editor:toggleEditor()
         self.Editor:exitGL()
         self.Editor = nil
     end
+end
+
+function shadertoy_editor:toggleFilenameBuffer()
+    self.show_filename_buffer = not self.show_filename_buffer
 end
 
 function shadertoy_editor:reloadShader()

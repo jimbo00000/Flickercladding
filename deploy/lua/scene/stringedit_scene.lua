@@ -28,13 +28,19 @@ function stringedit_scene:init(source)
     self.fbw, self.fbh = 2048,1024
     self.textscale = .0008
     self.max_charw = 0
- 
+
+    if type(source.data_dir) == "string" then
+        self.data_dir = source.data_dir
+    end
+
     if type(source.contents) == "string" then
         self.editbuf = EditBuffer.new()
         self.editbuf:loadFromString(source.contents)
     elseif type(source.filename) == "string" then
         self.editbuf = EditBuffer.new()
-        self.editbuf:loadfromfile(source.filename)
+        local fn = source.filename
+        if self.data_dir then fn = self.data_dir .. '/' .. fn end
+        self.editbuf:loadfromfile(fn)
     end
 
     self.draw_fbo = false
@@ -143,21 +149,24 @@ function stringedit_scene:exitGL_cursor()
     gl.glDeleteVertexArrays(1, vaoId)
 end
 
+function stringedit_scene:makeModelMatrix(m)
+    mm.make_identity_matrix(m)
+    mm.glh_translate(m, -1, 1, 0) -- align to upper left corner
+    mm.glh_translate(m, 150*self.textscale, 0, 0) -- leave a gap for line numbers
+    local s = self.textscale
+    mm.glh_scale(m, s, -s, s)
+    local aspect = self.fbw/self.fbh
+    mm.glh_scale(m,1/aspect,1,1)
+end
 
 function stringedit_scene:renderCursor(view, proj)
     local m = {}
-    mm.make_identity_matrix(m)
-    local aspect = self.fbw/self.fbh
-    mm.glh_translate(m, -aspect, 1, 0) -- align to upper left corner
-    mm.glh_translate(m, .25, 0, 0) -- show line numbers
+    self:makeModelMatrix(m)
     mm.glh_translate(m, 0, 0, .0002) -- put cursor in front
-    local s = self.textscale
-    mm.glh_scale(m, s, -s, s)
 
     local ccol, cline = self.editbuf.curcol, self.editbuf.curline
     mm.glh_translate(m, ccol*self.max_charw, (cline-1)*self.lineh, 0)
     mm.glh_translate(m, 0, -self.scroll * self.lineh, 0)
-    mm.pre_multiply(m, view)
 
     gl.glEnable(GL.GL_BLEND)
     gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -372,17 +381,12 @@ end
 
 function stringedit_scene:renderText(view, proj)
     local m = {}
-    mm.make_identity_matrix(m)
-    local aspect = self.fbw/self.fbh
-    mm.glh_translate(m, -aspect, 1, 0) -- align to upper left corner
-    mm.glh_translate(m, .25, 0, 0) -- move right to show line numbers
-    local s = self.textscale
-    mm.glh_scale(m, s, -s, s)
-    mm.pre_multiply(m, view)
+    self:makeModelMatrix(m)
 
     local linenum_color = {.7, .7, .7}
     local text_color = {1, 1, 1}
-    for i=1,self.visible_lines do
+    local numlines = math.min(self.visible_lines, #self.editbuf.lines)
+    for i=1,numlines do
         local k = i + self.scroll
         local v = self.editbuf.lines[k]
         self.glfont:render_string(m, proj, text_color, v)
@@ -391,7 +395,7 @@ function stringedit_scene:renderText(view, proj)
         local linenum_str = tostring(k)
         local mn = {}
         for i=1,16 do mn[i] = m[i] end
-        mm.glh_translate(mn, -100-59*string.len(linenum_str), 0, 0)
+        mm.glh_translate(mn, -40-59*string.len(linenum_str), 0, 0)
         self.glfont:render_string(mn, proj, linenum_color, linenum_str)
 
         mm.glh_translate(m, 0, self.lineh, 0)
@@ -403,19 +407,13 @@ end
 function stringedit_scene:renderErrorBackdrop(view, proj)
     for k,v in pairs(self.error_msgs) do
         local m = {}
-        mm.make_identity_matrix(m)
-        local aspect = self.fbw/self.fbh
-        mm.glh_translate(m, -aspect, 1, 0) -- align to upper left corner
-        mm.glh_translate(m, .25, 0, 0) -- show line numbers
+        self:makeModelMatrix(m)
         mm.glh_translate(m, 0, 0, .0002) -- put cursor in front
-        local s = self.textscale
-        mm.glh_scale(m, s, -s, s)
-        mm.glh_scale(m,#v,1,1)
+        mm.glh_scale(m,#v,1,1) -- cover under entire message
 
         local ccol, cline = 0, k+1
         mm.glh_translate(m, ccol*self.max_charw, (cline-1)*self.lineh, 0)
         mm.glh_translate(m, 0, -self.scroll * self.lineh, 0)
-        mm.pre_multiply(m, view)
 
         gl.glEnable(GL.GL_BLEND)
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -438,16 +436,12 @@ function stringedit_scene:renderErrorBackdrop(view, proj)
 end
 
 function stringedit_scene:renderErrorText(view, proj)
-    local aspect = self.fbw/self.fbh
     local errcol = {.9,.4,.1}
     local s = self.textscale
     for k,v in pairs(self.error_msgs) do
         local emat = {}
-        mm.make_identity_matrix(emat)
-        mm.glh_translate(emat, -aspect, 1, 0) -- align to upper left corner
-        mm.glh_translate(emat, .25, 0, 0) -- move right to show line numbers
-        mm.glh_scale(emat, s, -s, s)
-        mm.pre_multiply(emat, view)
+        self:makeModelMatrix(emat)
+
         mm.glh_translate(emat, 0, (k - self.scroll)*self.lineh, 0)
         self.glfont:render_string(emat, proj, errcol, v)
     end
@@ -472,7 +466,6 @@ function stringedit_scene:render_for_one_eye(view, proj)
         mm.glh_scale(m, aspect, 1, 1)
 
         mm.glh_translate(m, -.5, -.5, 0)
-        mm.pre_multiply(m, view)
 
         gl.glEnable(GL.GL_BLEND)
         gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
@@ -499,6 +492,19 @@ function stringedit_scene:keypressed(key, scancode, action, mods)
         if action == 1 then -- press
             if key == string.byte('F') then
                 self.draw_fbo = not self.draw_fbo
+                return true
+            end
+        end
+    end
+
+    if mods == 3 then -- ctrl,shift held
+        if action == 1 then -- press
+            local incr = 1.2
+            if key == string.byte('=') then
+                self.textscale = self.textscale * incr
+                return true
+            elseif key == string.byte('-') then
+                self.textscale = self.textscale / incr
                 return true
             end
         end
