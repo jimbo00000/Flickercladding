@@ -337,10 +337,9 @@ local keymap_glfw = {
 local function map_keycode(key, mods)
     -- Platform dependent bits for modifiers
     local shift = 1
-    if ANDROID then shift = 65 end
-    local shiftheld = bit.band(mods,shift) ~= shift
-    local sh12 = 1
-    if shiftheld then sh12 = 2 end
+    local sh12 = 2
+    local shiftheld = bit.band(mods,shift) == shift
+    if shiftheld then sh12 = 1 end
 
     local keymap = keymap_glfw
     if keymap[key] then
@@ -365,7 +364,14 @@ function on_lua_keypressed(key, scancode, action, mods)
         if scancode == 67 then key = 259 end -- bksp
         if scancode == 66 then key = 257 end -- enter
     end
+
+    -- Munge mods bits to match desktop
     local ctrlheld = bit.band(mods,ctrl) == ctrl
+    local shiftheld = bit.band(mods,shift) == shift
+
+    mods = 0
+    if shiftheld then mods = mods + 1 end
+    if ctrlheld then mods = mods + 2 end
 
     -- TODO an escape sequence here?
     if key == 298 then -- F9
@@ -374,9 +380,9 @@ function on_lua_keypressed(key, scancode, action, mods)
 
     if action == 1 or action == 2 then
         -- Check for scene switch
-        if bit.band(mods,ctrl) ~= 0 then
+        if ctrlheld then
             if key == 9 or key == 258 or scancode == 61 then
-                switch_scene(bit.band(mods,shift) ~= 0)
+                switch_scene(shiftheld)
             end
         end
 
