@@ -112,7 +112,8 @@ void TabletWindow::_DrawText(int winw, int winh)
     if (pFont24 != NULL)
     {
         const int lineh = 40;
-        int y = 40 - lineh;
+        int y = 40 - lineh + winh - 100;
+        if (m_movingChassisFlag) { y -= 4 * lineh; }
         const float3 col = {.5f, 1.f, .5f};
         const bool doKerning = true;
 
