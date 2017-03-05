@@ -393,7 +393,6 @@ void TabletWindow::OnWheelEvent(double dx, double dy)
 
 void TabletWindow::OnKeyEvent(int key, int scancode, int action, int mods)
 {
-    LOG_INFO("OnKeyEvent: %d %d %d %d\n", key, scancode, action, mods);
     m_luaScene.keypressed(key, scancode, action, mods);
 
     // F keys do not have key codes, only scan codes
