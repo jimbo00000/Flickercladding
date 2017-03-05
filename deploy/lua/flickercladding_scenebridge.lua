@@ -365,6 +365,7 @@ function on_lua_keypressed(key, scancode, action, mods)
         if scancode == 67 then key = 259 end -- bksp
         if scancode == 66 then key = 257 end -- enter
     end
+    local ctrlheld = bit.band(mods,ctrl) == ctrl
 
     -- TODO an escape sequence here?
     if key == 298 then -- F9
@@ -384,7 +385,7 @@ function on_lua_keypressed(key, scancode, action, mods)
             if key == 96 then return end -- toggle with ` handled in Scene
 
             local ch = map_keycode(key, mods)
-            if is_printable(ch) then
+            if is_printable(ch) and not ctrlheld then
                 Scene:charkeypressed(string.char(ch))
             end
 
