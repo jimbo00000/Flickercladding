@@ -32,6 +32,10 @@ void main()
 }
 ]]
 
+local frag_body_backdrop = [[
+void main() { fragColor = vec4(0.,0.,0.,.5); }
+]]
+
 function shadertoy_editor:init()
     self.time = 0
     self.Editor = nil
@@ -278,6 +282,11 @@ function shadertoy_editor:initGL()
 
     self:buildShader()
 
+    self.prog_backdrop = make_shader_from_source({
+        vsrc = basic_vert,
+        fsrc = frag_header..frag_body_backdrop,
+        })
+
     self:initQuadAttributes()
     gl.glBindVertexArray(0)
 
@@ -334,6 +343,14 @@ function shadertoy_editor:render_for_one_eye(view, proj)
 end
 
 function shadertoy_editor:renderFilenameBuffer(view, proj)
+    gl.glDisable(GL.GL_DEPTH_TEST)
+    gl.glEnable(GL.GL_BLEND)
+    gl.glUseProgram(self.prog_backdrop)
+    gl.glBindVertexArray(self.vao)
+    gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
+    gl.glBindVertexArray(0)
+    gl.glUseProgram(0)
+
     local col = {1, 1, 1}
 
     local m = {}
@@ -345,7 +362,6 @@ function shadertoy_editor:renderFilenameBuffer(view, proj)
 
     local p = {}
     mm.glh_ortho(p, 0, self.win_w, self.win_h, 0, -1, 1)
-    gl.glDisable(GL.GL_DEPTH_TEST)
 
     mm.glh_translate(m2, 280,0,0)
     self.glfont:render_string(m2, p, col, self.filename_buffer)

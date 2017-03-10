@@ -7,6 +7,7 @@ camera = {}
 
 local ffi = require("ffi")
 local glfw = require("glfw")
+local SDL = require "lib/sdl"
 local mm = require("util.matrixmath")
 
 camera.__index = camera
@@ -69,6 +70,18 @@ function camera:onkey(key, scancode, action, mods)
     if self.keystates[glfw.GLFW.KEY_LEFT] ~= glfw.GLFW.RELEASE then km[1] = km[1] - spd end
     if self.keystates[glfw.GLFW.KEY_RIGHT] ~= glfw.GLFW.RELEASE then km[1] = km[1] + spd end
 
+    if self.keystates[SDL.SDLK_w] ~= 0 then km[3] = km[3] + -spd end -- -z forward
+    if self.keystates[SDL.SDLK_s] ~= 0 then km[3] = km[3] - -spd end
+    if self.keystates[SDL.SDLK_a] ~= glfw.GLFW.RELEASE then km[1] = km[1] - spd end
+    if self.keystates[SDL.SDLK_d] ~= glfw.GLFW.RELEASE then km[1] = km[1] + spd end
+    if self.keystates[SDL.SDLK_q] ~= glfw.GLFW.RELEASE then km[2] = km[2] - spd end
+    if self.keystates[SDL.SDLK_e] ~= glfw.GLFW.RELEASE then km[2] = km[2] + spd end
+    if self.keystates[SDL.SDLK_UP] ~= glfw.GLFW.RELEASE then km[3] = km[3] + -spd end
+    if self.keystates[SDL.SDLK_DOWN] ~= glfw.GLFW.RELEASE then km[3] = km[3] - -spd end
+    if self.keystates[SDL.SDLK_LEFT] ~= glfw.GLFW.RELEASE then km[1] = km[1] - spd end
+    if self.keystates[SDL.SDLK_RIGHT] ~= glfw.GLFW.RELEASE then km[1] = km[1] + spd end
+
+
     if self.keystates[glfw.GLFW.KEY_LEFT_CONTROL] ~= glfw.GLFW.RELEASE then mag = 10 * mag end
     if self.keystates[glfw.GLFW.KEY_LEFT_SHIFT] ~= glfw.GLFW.RELEASE then mag = .1 * mag end
     for i=1,3 do
@@ -77,20 +90,20 @@ function camera:onkey(key, scancode, action, mods)
 end
 
 function camera:onclick(button, action, mods, x, y)
-    if action == glfw.GLFW.PRESS then
+    if action == 1 then
         self.holding = button
         self.clickpos = {x,y}
         self.clickrot = {self.objrot[1], self.objrot[2]}
-    elseif action == glfw.GLFW.RELEASE then
+    elseif action == 0 then
         self.holding = nil
     end
 end
 
 function camera:onmousemove(x, y)
-    if self.holding == glfw.GLFW.MOUSE_BUTTON_1 then
+    if self.holding == 0 then
         self.objrot[1] = self.clickrot[1] + x-self.clickpos[1]
         self.objrot[2] = self.clickrot[2] + y-self.clickpos[2]
-    elseif self.holding == glfw.GLFW.MOUSE_BUTTON_2 then
+    elseif self.holding == 1 then
         local s = .01
         if self.ctrldown then s = s * 10 end
         if self.shiftdown then s = s / 10 end

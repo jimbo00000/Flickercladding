@@ -10,7 +10,6 @@
     and passing the color rgb(xyz) values directly through to output.
 ]]
 vsfstri = {}
-
 vsfstri.__index = vsfstri
 
 function vsfstri.new(...)
@@ -23,17 +22,13 @@ end
 
 function vsfstri:init()
     -- Object-internal state: hold a list of VBOs for deletion on exitGL
-    self.vbos = {}
     self.vao = 0
+    self.vbos = {}
     self.prog = 0
 end
 
---local openGL = require("opengl")
 local ffi = require("ffi")
 local sf = require("util.shaderfunctions")
-
-local glIntv = ffi.typeof('GLint[?]')
-local glUintv = ffi.typeof('GLuint[?]')
 local glFloatv = ffi.typeof('GLfloat[?]')
 
 local basic_vert = [[
@@ -54,7 +49,6 @@ void main()
 }
 ]]
 
-
 local basic_frag = [[
 #version 310 es
 
@@ -73,6 +67,9 @@ void main()
 ]]
 
 function vsfstri:initTriAttributes()
+    local glIntv = ffi.typeof('GLint[?]')
+    local glUintv = ffi.typeof('GLuint[?]')
+
     local verts = glFloatv(3*3, {
         0,0,0,
         1,0,0,

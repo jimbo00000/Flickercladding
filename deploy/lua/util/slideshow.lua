@@ -50,19 +50,12 @@ function Slideshow:init(strings)
 end
 
 function Slideshow:initGL(dataDir)
-    local dir = "fonts"
-    local fontname = "segoe_ui128"
-    if dataDir then dir = dataDir .. "/" .. dir end
-    self.glfont = GLFont.new(fontname..'.fnt', fontname..'_0.raw')
-    self.glfont:setDataDirectory(dir)
-    self.glfont:initGL()
 end
 
 function Slideshow:exitGL()
-    self.glfont:exitGL()
 end
 
-function Slideshow:draw_text()
+function Slideshow:draw_text(glfont)
     local vp = ffi.new("int[4]")
     gl.glGetIntegerv(GL.GL_VIEWPORT, vp)
     local win_w,win_h = vp[2]-vp[0], vp[3]-vp[1]
@@ -86,7 +79,7 @@ function Slideshow:draw_text()
     local m = {}
     mm.make_identity_matrix(m)
     mm.glh_translate(m, 90, 40, 0)
-    self.glfont:render_string(m, p, col, title)
+    glfont:render_string(m, p, col, title)
 
     mm.make_identity_matrix(m)
     local s = .68
@@ -97,7 +90,7 @@ function Slideshow:draw_text()
     for i=1,self.shown_lines do
         if bullet_points[i] then
             mm.glh_translate(m, 0, lineh, 0)
-            self.glfont:render_string(m, p, col, bullet_points[i])
+            glfont:render_string(m, p, col, bullet_points[i])
         end
     end
 
@@ -107,7 +100,7 @@ function Slideshow:draw_text()
         local s = .25
         mm.glh_translate(m, w-300, h-50, 0)
         mm.glh_scale(m, s,s,s)
-        self.glfont:render_string(m, p, gray, self.copyright)
+        glfont:render_string(m, p, gray, self.copyright)
     end
 end
 
