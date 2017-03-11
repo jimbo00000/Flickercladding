@@ -393,15 +393,14 @@ function on_lua_keypressed(key, scancode, action, mods)
 
             local ch = map_keycode(key, mods)
             if is_printable(ch) and not ctrlheld then
-                Scene:charkeypressed(string.char(ch))
+                if Scene.charkeypressed then
+                    Scene:charkeypressed(string.char(ch))
+                end
             end
 
             if consumed then return end
         end
 
-        if Scene.charkeypressed then
-            --Scene:charkeypressed(string.char(scancode))
-        end
     elseif action == 0 then
         if Scene.keyreleased then
             Scene:keyreleased(key, scancode, action, mods)
