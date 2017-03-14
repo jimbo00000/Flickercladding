@@ -1,9 +1,12 @@
 -- shadertoy_editor.lua
--- A shadertoy implementation with built-in editor.
--- Takes key and (todo) mouse input, rebuilding shader when changed.
+-- A minimal shadertoy implementation with built-in editor.
+-- Loads shader(toy)s from file and saves.
+-- Takes key input, rebuilding shader on every keypress.
+-- The editor displays error messages on the relevant line in src.
 
 local ffi = require "ffi"
 local mm = require "util.matrixmath"
+local sf2 = require "util.shaderfunctions2"
 local EditorLibrary = require "scene.stringedit_scene"
 require "util.glfont"
 
@@ -50,29 +53,12 @@ function shadertoy_editor:init()
     self.update_every_key = true
 
     self.show_filename_buffer = true
-    self.filename_buffer = "Filename here"
+    self.filename_buffer = "sh1"
     self.glfont = nil
-end
-
-function shadertoy_editor:loadShaderFromDataFile()
-    local shfilename = "fragshader.glsl"
-    if self.data_dir then shfilename = self.data_dir .. '/' .. shfilename end
-    local f = io.open(shfilename, "r")
-    if not f then return end
-    local content = f:read("*all")
-    f:close()
-
-    self.fragsrc = frag_body
-    if content then
-        self.fragsrc = content
-        self.src_filename = shfilename
-    end
 end
 
 function shadertoy_editor:setDataDirectory(dir)
     self.data_dir = dir
-
-    self:loadShaderFromDataFile()
 end
 
 local basic_vert = [[
@@ -103,16 +89,15 @@ out vec4 fragColor;
 #line 1
 ]]
 
-function shadertoy_editor:initQuadAttributes()
+function shadertoy_editor:initTriAttributes()
     local glIntv   = ffi.typeof('GLint[?]')
-    local glUintv  = ffi.typeof('GLuint[?]')
     local glFloatv = ffi.typeof('GLfloat[?]')
 
-    local verts = glFloatv(4*2, {
+    -- One big tri to avoid some overdraw on the seam
+    local verts = glFloatv(3*2, {
         -1,-1,
-        1,-1,
-        1,1,
-        -1,1,
+        3,-1,
+        -1,3,
         })
 
     local vpos_loc = gl.glGetAttribLocation(self.prog, "vPosition")
@@ -125,152 +110,21 @@ function shadertoy_editor:initQuadAttributes()
     table.insert(self.vbos, vvbo)
 
     gl.glEnableVertexAttribArray(vpos_loc)
-
-    local quads = glUintv(3*2, {
-        0,1,2,
-        0,2,3,
-    })
-    local qvbo = glIntv(0)
-    gl.glGenBuffers(1, qvbo)
-    gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, qvbo[0])
-    gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, ffi.sizeof(quads), quads, GL.GL_STATIC_DRAW)
-    table.insert(self.vbos, qvbo)
 end
 
--- Local copies of functions from shaderutils
--- so we can get back the errors and insert them into the editor.
-local function load_and_compile_shader_source(src, type)
-    local glIntv = ffi.typeof('GLint[?]')
-    local glCharv = ffi.typeof('GLchar[?]')
-    local glConstCharpp = ffi.typeof('const GLchar *[1]')
-
-    -- Version replacement for various GL implementations 
-    if ffi.os == "OSX" then
-        -- MacOS X's inadequate GL support
-        src = string.gsub(src, "#version 300 es", "#version 410")
-        src = string.gsub(src, "#version 310 es", "#version 410")
-    elseif string.match(ffi.string(gl.glGetString(GL.GL_VENDOR)), "ATI") then
-        -- AMD's strict standard compliance
-        src = string.gsub(src, "#version 300 es", "#version 430")
-        src = string.gsub(src, "#version 310 es", "#version 430")
-    end
-    
-    local sourcep = glCharv(#src + 1)
-    ffi.copy(sourcep, src)
-    local sourcepp = glConstCharpp(sourcep)
-
-    local shaderObject = gl.glCreateShader(type)
-    local errorText = nil
-
-    gl.glShaderSource(shaderObject, 1, sourcepp, NULL)
-    gl.glCompileShader(shaderObject)
-
-    local ill = glIntv(0)
-    gl.glGetShaderiv(shaderObject, GL.GL_INFO_LOG_LENGTH, ill)
-    if (ill[0] > 1) then
-        local cw = glIntv(0)
-        local logp = glCharv(ill[0] + 1)
-        gl.glGetShaderInfoLog(shaderObject, ill[0], cw, logp)
-        errorText = ffi.string(logp)
-        gl.glDeleteShader(shaderObject)
-        return 0, errorText
-    end
-
-    local success = glIntv(0)
-    gl.glGetShaderiv(shaderObject, GL.GL_COMPILE_STATUS, success);
-    assert(success[0] == GL.GL_TRUE)
-
-    return shaderObject, errorText
-end
-
-local function make_shader_from_source(sources)
-    local glIntv = ffi.typeof('GLint[?]')
-    local glCharv = ffi.typeof('GLchar[?]')
-
-    local program = gl.glCreateProgram()
-
-    -- Deleted shaders, once attached, will be deleted when program is.
-    if type(sources.vsrc) == "string" then
-        local vs, err = load_and_compile_shader_source(sources.vsrc, GL.GL_VERTEX_SHADER)
-        if err then return 0, err end
-        gl.glAttachShader(program, vs)
-        gl.glDeleteShader(vs)
-    end
-    if type(sources.fsrc) == "string" then
-        local fs, err = load_and_compile_shader_source(sources.fsrc, GL.GL_FRAGMENT_SHADER)
-        if err then return 0, err end
-        gl.glAttachShader(program, fs)
-        gl.glDeleteShader(fs)
-    end
-
-    gl.glLinkProgram(program)
-
-    local ill = glIntv(0)
-    gl.glGetProgramiv(program, GL.GL_INFO_LOG_LENGTH, ill)
-    if (ill[0] > 1) then
-        local cw = glIntv(0)
-        local logp = glCharv(ill[0] + 1)
-        gl.glGetProgramInfoLog(program, ill[0], cw, logp)
-        return 0, ffi.string(logp)
-    end
-
-    gl.glUseProgram(0)
-    return program
-end
-
-
-
--- http://lua-users.org/wiki/SplitJoin
-function split_into_lines(str)
-    local t = {}
-    local function helper(line) table.insert(t, line) return "" end
-    helper((str:gsub("(.-)\r?\n", helper)))
-    return t
-end
-
--- Catch, parse, and display this error
--- overlaid on the editor's code
-function shadertoy_editor:pushErrorMessages(err)
-    -- Sample errors:
-    -- Intel: [ERROR: 0:4: 'vec2' : syntax error syntax error]
-    if not self.Editor then return end
-    local lines = split_into_lines(err)
-    if #lines == 0 then return end
-
-    for _,v in pairs(lines) do
-        if #v > 1 then
-            -- Strip off digit, non-digit, digit, non-digit
-            local linestr = string.match(v, "%d+[^%d]?%d+[^%d]?")
-            if linestr then
-                -- Get last digit sequence in that string
-                for match in string.gmatch(linestr, "%d+") do
-                    linestr = match
-                end
-
-                local linenum = tonumber(linestr)
-                -- TODO concatenate or stack lines
-                -- TODO wrap error lines in display
-                self.Editor.error_msgs[tonumber(linenum)] = v
-            end
-        end
-    end
-    -- Lua out of memory errors?
-    collectgarbage()
-end
-
+-- Recompile the current shader, updating error messages.
 function shadertoy_editor:buildShader()
     gl.glDeleteProgram(self.prog)
-    self.prog, err = make_shader_from_source({
-        vsrc = basic_vert,
-        fsrc = frag_header..self.fragsrc,
-        })
-
     if self.Editor then
         self.Editor.error_msgs = {}
     end
 
+    self.prog, err = sf2.make_shader_from_source({
+        vsrc = basic_vert,
+        fsrc = frag_header..self.fragsrc,
+        })
     if err then
-        self:pushErrorMessages(err)
+        self:pushGlslErrorMessages(err)
     end
 end
 
@@ -280,14 +134,14 @@ function shadertoy_editor:initGL()
     self.vao = vaoId[0]
     gl.glBindVertexArray(self.vao)
 
-    self:buildShader()
+    self:buildShader() -- Error messages get piped to editor
 
-    self.prog_backdrop = make_shader_from_source({
+    self.prog_backdrop = sf2.make_shader_from_source({
         vsrc = basic_vert,
         fsrc = frag_header..frag_body_backdrop,
         })
 
-    self:initQuadAttributes()
+    self:initTriAttributes()
     gl.glBindVertexArray(0)
 
     local dir = "fonts"
@@ -317,24 +171,13 @@ function shadertoy_editor:render_for_one_eye(view, proj)
         gl.glUniform1f(uan_loc, self.time)
 
         gl.glBindVertexArray(self.vao)
-        gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
+        gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
         gl.glBindVertexArray(0)
         gl.glUseProgram(0)
     end
 
     if self.Editor then
-        local id = {}
-        mm.make_identity_matrix(id)
-        local mv = {}
-        local aspect = self.win_w / self.win_h
-        mm.make_scale_matrix(mv,1/aspect,1,1)
-        local s = .9
-        mm.glh_scale(mv,s,s,s)
-        mm.glh_translate(mv,.3,0,0)
-
-        gl.glDisable(GL.GL_DEPTH_TEST)
-        self.Editor:render_for_one_eye(mv,id)
-        gl.glEnable(GL.GL_DEPTH_TEST)
+        self:renderEditor(view, proj)
     end
 
     if self.show_filename_buffer then
@@ -342,12 +185,78 @@ function shadertoy_editor:render_for_one_eye(view, proj)
     end
 end
 
+function shadertoy_editor:timestep(absTime, dt)
+    self.time = absTime
+end
+
+function shadertoy_editor:resizeViewport(w,h)
+    self.win_w, self.win_h = w, h
+end
+
+
+--
+-- Editor Concerns below
+--
+
+-- http://lua-users.org/wiki/SplitJoin
+function split_into_lines(str)
+    local t = {}
+    local function helper(line) table.insert(t, line) return "" end
+    helper((str:gsub("(.-)\r?\n", helper)))
+    return t
+end
+
+-- Catch, parse, and display this list of error messages
+-- overlaid on the editor's code under their respective lines.
+function shadertoy_editor:pushGlslErrorMessages(err)
+    -- Sample errors:
+    -- Intel: [ERROR: 0:4: 'vec2' : syntax error syntax error]
+    if not self.Editor then return end
+    local lines = split_into_lines(err)
+    if #lines == 0 then return end
+
+    for _,v in pairs(lines) do
+        if #v > 1 then
+            -- Strip off digit, non-digit, digit, non-digit
+            local linestr = string.match(v, "%d+[^%d]?%d+[^%d]?")
+            if linestr then
+                -- Get last digit sequence in that string
+                for match in string.gmatch(linestr, "%d+") do
+                    linestr = match
+                end
+
+                local linenum = tonumber(linestr)
+                -- TODO concatenate or stack lines
+                -- TODO wrap error lines in display
+                self.Editor.error_msgs[tonumber(linenum)] = v
+            end
+        end
+    end
+    -- Lua out of memory errors?
+    collectgarbage()
+end
+
+function shadertoy_editor:renderEditor(view, proj)
+    local id = {}
+    mm.make_identity_matrix(id)
+    local mv = {}
+    local aspect = self.win_w / self.win_h
+    mm.make_scale_matrix(mv,1/aspect,1,1)
+    local s = .9
+    mm.glh_scale(mv,s,s,s)
+    mm.glh_translate(mv,.3,0,0)
+
+    gl.glDisable(GL.GL_DEPTH_TEST)
+    self.Editor:render_for_one_eye(mv,id)
+    gl.glEnable(GL.GL_DEPTH_TEST)
+end
+
 function shadertoy_editor:renderFilenameBuffer(view, proj)
     gl.glDisable(GL.GL_DEPTH_TEST)
     gl.glEnable(GL.GL_BLEND)
     gl.glUseProgram(self.prog_backdrop)
     gl.glBindVertexArray(self.vao)
-    gl.glDrawElements(GL.GL_TRIANGLES, 6, GL.GL_UNSIGNED_INT, nil)
+    gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3)
     gl.glBindVertexArray(0)
     gl.glUseProgram(0)
 
@@ -364,15 +273,9 @@ function shadertoy_editor:renderFilenameBuffer(view, proj)
     mm.glh_ortho(p, 0, self.win_w, self.win_h, 0, -1, 1)
 
     mm.glh_translate(m2, 280,0,0)
+    self.glfont:render_string(m2, p, col, "Load from file:")
+    mm.glh_translate(m2, 0,80,0)
     self.glfont:render_string(m2, p, col, self.filename_buffer)
-end
-
-function shadertoy_editor:timestep(absTime, dt)
-    self.time = absTime
-end
-
-function shadertoy_editor:resizeViewport(w,h)
-    self.win_w, self.win_h = w, h
 end
 
 function shadertoy_editor:keypressed(key, scancode, action, mods)
@@ -431,7 +334,7 @@ function shadertoy_editor:keypressed(key, scancode, action, mods)
                     print("SAVE: ",self.filename_buffer, self.data_dir)
                     local fn = self.data_dir..'/'.."shaders/"..self.filename_buffer
                     if self.Editor then
-                        self.Editor.editbuf:savetofile(fn)
+                        self.Editor.editbuf:saveToFile(fn)
                     end
                     return true
                 end
@@ -505,7 +408,7 @@ end
 
 function shadertoy_editor:saveShader()
     if not self.Editor then return end
-    self.Editor.editbuf:savetofile(self.src_filename)
+    self.Editor.editbuf:saveToFile(self.src_filename)
 end
 
 return shadertoy_editor

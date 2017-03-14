@@ -1,10 +1,16 @@
---[[ stringedit_scene:lua
+-- stringedit_scene.lua
+-- Holds an instance of EditBuffer and displays its contents and state.
+-- Draws the text, cursor, backdrop and error message layer.
+-- Passes along input and handles scrolling.
 
-    Text editor
-]]
+require "util.glfont"
+require "util.editbuffer"
+local ffi = require "ffi"
+local sf = require "util.shaderfunctions"
+local mm = require "util.matrixmath"
+local fbf = require "util.fbofunctions"
 
 stringedit_scene = {}
-
 stringedit_scene.__index = stringedit_scene
 
 function stringedit_scene.new(...)
@@ -14,6 +20,7 @@ function stringedit_scene.new(...)
     end 
     return self
 end
+
 -- Takes named parameters: filename, contents
 function stringedit_scene:init(source)
     self.vbos = {}
@@ -40,7 +47,7 @@ function stringedit_scene:init(source)
         self.editbuf = EditBuffer.new()
         local fn = source.filename
         if self.data_dir then fn = self.data_dir .. '/' .. fn end
-        self.editbuf:loadfromfile(fn)
+        self.editbuf:loadFromFile(fn)
     end
 
     self.draw_fbo = false
@@ -51,13 +58,6 @@ function stringedit_scene:init(source)
     self.prog_quad = 0
     self.error_msgs = {}
 end
-
-require "util.glfont"
-require "util.editbuffer"
-local ffi = require "ffi"
-local sf = require "util.shaderfunctions"
-local mm = require "util.matrixmath"
-local fbf = require "util.fbofunctions"
 
 local glIntv   = ffi.typeof('GLint[?]')
 local glUintv  = ffi.typeof('GLuint[?]')
@@ -159,6 +159,39 @@ function stringedit_scene:makeModelMatrix(m)
     mm.glh_scale(m,1/aspect,1,1)
 end
 
+-- For editing visibility, put a backdrop behind the current line.
+-- TODO: refactor this into a function called 3 times.
+function stringedit_scene:renderCurrentLineBackdrop(view, proj)
+    local m = {}
+    self:makeModelMatrix(m)
+    mm.glh_translate(m, 0, 0, -.0002) -- place behind text
+    local cline = self.editbuf.curline
+    local line = self.editbuf.lines[cline]
+    if not line then return end
+    mm.glh_scale(m,#line,1,1) -- cover under entire line
+
+    mm.glh_translate(m, 0, (cline-1)*self.lineh, 0)
+    mm.glh_translate(m, 0, -self.scroll * self.lineh, 0)
+
+    gl.glEnable(GL.GL_BLEND)
+    gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+
+    gl.glUseProgram(self.prog_cursor)
+    local umv_loc = gl.glGetUniformLocation(self.prog_cursor, "mvmtx")
+    local upr_loc = gl.glGetUniformLocation(self.prog_cursor, "prmtx")
+    local ucol_loc = gl.glGetUniformLocation(self.prog_cursor, "uColor")
+    local color = {0.1,0.1,0.1,.75}
+    gl.glUniform4f(ucol_loc, color[1], color[2], color[3], color[4])
+    gl.glUniformMatrix4fv(upr_loc, 1, GL.GL_FALSE, glFloatv(16, proj))
+    gl.glUniformMatrix4fv(umv_loc, 1, GL.GL_FALSE, glFloatv(16, m))
+    gl.glBindVertexArray(self.vao)
+    gl.glDrawArrays(GL.GL_TRIANGLES, 0, 3*2)
+    gl.glBindVertexArray(0)
+    gl.glUseProgram(0)
+
+    gl.glDisable(GL.GL_BLEND)
+end
+
 function stringedit_scene:renderCursor(view, proj)
     local m = {}
     self:makeModelMatrix(m)
@@ -186,9 +219,6 @@ function stringedit_scene:renderCursor(view, proj)
 
     gl.glDisable(GL.GL_BLEND)
 end
-
-
-
 
 
 local texquad_vert = [[
@@ -475,6 +505,7 @@ function stringedit_scene:render_for_one_eye(view, proj)
         gl.glDisable(GL.GL_BLEND)
     else
         -- Floating text in space
+        self:renderCurrentLineBackdrop(view, proj)
         self:renderText(view, proj)
         self:renderCursor(view, proj)
         self:renderErrors(view, proj)
@@ -514,26 +545,26 @@ function stringedit_scene:keypressed(key, scancode, action, mods)
     local ch = key
     local func_table = {
         [259] = function (x) -- Backspace
-            self.editbuf:backspace()
+            self.editbuf:onBackspace()
         end,
         [257] = function (x) -- Enter
-            self.editbuf:enter()
+            self.editbuf:onEnter()
         end,
         [262] = function (x) -- Right
-            self.editbuf:cursormotion(1,0)
+            self.editbuf:cursorMotion(1,0)
         end,
         [263] = function (x) -- Left
-            self.editbuf:cursormotion(-1,0)
+            self.editbuf:cursorMotion(-1,0)
         end,
         [264] = function (x) -- Down
-            self.editbuf:cursormotion(0,1)
+            self.editbuf:cursorMotion(0,1)
             if self.scroll + self.visible_lines < self.editbuf.curline then
                 self.scroll = self.editbuf.curline - self.visible_lines
                 self.scroll = math.max(0, self.scroll)
             end
         end,
         [265] = function (x) -- Up
-            self.editbuf:cursormotion(0,-1)
+            self.editbuf:cursorMotion(0,-1)
             if self.scroll >= self.editbuf.curline then
                 self.scroll = self.editbuf.curline - 1
             end
@@ -541,12 +572,12 @@ function stringedit_scene:keypressed(key, scancode, action, mods)
         [266] = function (x) -- Page Up
             self.scroll = self.scroll - scrollAmt
             self.scroll = math.max(self.scroll, 0)
-            self.editbuf:cursormotion(0,-scrollAmt)
+            self.editbuf:cursorMotion(0,-scrollAmt)
         end,
         [267] = function (x) -- Page Down
             self.scroll = self.scroll + scrollAmt
             self.scroll = math.min(self.scroll, #self.editbuf.lines - self.visible_lines)
-            self.editbuf:cursormotion(0,scrollAmt)
+            self.editbuf:cursorMotion(0,scrollAmt)
         end,
     }
     local f = func_table[ch]
@@ -559,7 +590,7 @@ function stringedit_scene:keypressed(key, scancode, action, mods)
 end
 
 function stringedit_scene:charkeypressed(ch)
-    self.editbuf:addchar(ch)
+    self.editbuf:addChar(ch)
     return true
 end
 
@@ -567,7 +598,7 @@ function stringedit_scene:onwheel(x,y)
     local scrollAmt = 10
 
     y = math.floor(-5*y)
-    self.editbuf:cursormotion(0,y)
+    self.editbuf:cursorMotion(0,y)
 
     if self.scroll + self.visible_lines < self.editbuf.curline then
         self.scroll = self.editbuf.curline - self.visible_lines

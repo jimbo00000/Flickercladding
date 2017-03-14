@@ -1,9 +1,7 @@
 -- editbuffer.lua
-
---[[
-    EditBuffer class
-    Holds a list of character lines and editing state.
-]]
+-- A minimally functional text editor in a small amount of LOC.
+-- Holds a file in a buffer as a list of lines and a cursor position.
+-- Does not handle any display.
 
 EditBuffer = {}
 EditBuffer.__index = EditBuffer
@@ -23,7 +21,8 @@ function EditBuffer:init()
     self.curcol = 0
 end
 
-function EditBuffer:addchar(ch)
+-- Add a character into the edit buffer at the current cursor position.
+function EditBuffer:addChar(ch)
     local line = self.lines[self.curline]
     if line then
         local c = self.curcol
@@ -36,7 +35,8 @@ function EditBuffer:addchar(ch)
     end
 end
 
-function EditBuffer:backspace()
+-- Delete the character before the current cursor position.
+function EditBuffer:onBackspace()
     local line = self.lines[self.curline]
     if not line then return end
     local c = self.curcol
@@ -67,7 +67,9 @@ function EditBuffer:backspace()
     end
 end
 
-function EditBuffer:enter()
+-- Insert a newline into the edit buffer, splitting the line
+-- at the current cursor position.
+function EditBuffer:onEnter()
     local line = self.lines[self.curline]
     if not line then return end
 
@@ -86,7 +88,9 @@ function EditBuffer:enter()
     self.curcol = 0
 end
 
-function EditBuffer:cursormotion(dx, dy)
+-- Move the cursor the given amount of character positions in x and y.
+-- Typically called on arrow key presses.
+function EditBuffer:cursorMotion(dx, dy)
     self.curcol = self.curcol + dx
     self.curline = self.curline + dy
 
@@ -132,7 +136,7 @@ function EditBuffer:cursormotion(dx, dy)
 end
 
 -- Load text file into buffer
-function EditBuffer:loadfromfile(filename)
+function EditBuffer:loadFromFile(filename)
     self.lines = {}
     local file = io.open(filename)
     if file then
@@ -145,7 +149,7 @@ function EditBuffer:loadfromfile(filename)
     end
 end
 
-function EditBuffer:savetofile(filename)
+function EditBuffer:saveToFile(filename)
     --if not filename then return end
     local file = io.open(filename, "w")
     if file then
