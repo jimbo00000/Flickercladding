@@ -166,6 +166,7 @@ void TabletWindow::_DrawText(int winw, int winh)
             proj,
             doKerning);
 
+        y -= winh - 20; // position text at top
         const float3 red = { 1.f, .8f, .8f };
         std::string err = m_luaScene.ErrorText();
         const int cols = 40;
