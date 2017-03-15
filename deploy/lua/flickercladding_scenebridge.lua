@@ -58,9 +58,10 @@ function switch_to_scene(name)
 end
 
 local scene_modules = {
-    "compute_image",
+    --"compute_image",
     --"key_check",
     "shadertoy_editor",
+    "pointsvs_editor",
     "clockface",
     "droid",
     "colorcube",
